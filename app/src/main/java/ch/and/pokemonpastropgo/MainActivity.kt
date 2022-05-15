@@ -15,9 +15,10 @@ import ch.and.pokemonpastropgo.viewmodels.ViewModelFactory
 class MainActivity : AppCompatActivity() {
     lateinit var mainBinding: ActivityMainBinding
 
-    private val vm: HuntZonesViewmodel by viewModels{
+    lateinit var vm: HuntZonesViewmodel
+    /*private val vm: HuntZonesViewmodel by viewModels{
         ViewModelFactory((application as PPTGDatabaseApp).repository)
-    }
+    }*/
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -31,6 +32,7 @@ class MainActivity : AppCompatActivity() {
             val i = Intent(this, MapsActivity::class.java)
             startActivity(i)
         }
-
+        vm = HuntZonesViewmodel((application as PPTGDatabaseApp).repository)
+        vm.createZone("1","2",0.0,0.0,0.0)
     }
 }

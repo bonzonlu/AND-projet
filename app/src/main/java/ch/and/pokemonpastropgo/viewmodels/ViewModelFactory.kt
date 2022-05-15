@@ -10,5 +10,6 @@ class ViewModelFactory(private val repository: HuntZoneRepository): ViewModelPro
         if  (modelClass.isAssignableFrom(HuntZonesViewmodel::class.java)){
             return HuntZonesViewmodel(repository) as T
         }
-        throw IllegalArgumentException("Unknown ViewModel Class")    }
+        throw IllegalArgumentException("Unknown ViewModel Class")
+    }
 }
