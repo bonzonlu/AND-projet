@@ -7,7 +7,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 class HuntZoneRepository(private val huntZoneDAO: HuntZoneDAO, private val scope: CoroutineScope) {
-    val allZoneDAO = huntZoneDAO.getAllZones()
+    val allZones = huntZoneDAO.getAllZones()
     val zonesCount = huntZoneDAO.getCount()
 
     fun insertZone(zone: HuntZone){

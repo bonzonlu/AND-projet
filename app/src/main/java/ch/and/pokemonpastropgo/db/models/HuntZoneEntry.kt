@@ -1,4 +1,4 @@
-package ch.and.pokemonpastropgo.db.dao
+package ch.and.pokemonpastropgo.db.models
 
 import androidx.room.Embedded
 import androidx.room.Relation

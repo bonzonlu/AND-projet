@@ -3,6 +3,7 @@ package ch.and.pokemonpastropgo.db.dao
 import androidx.lifecycle.LiveData
 import androidx.room.*
 import ch.and.pokemonpastropgo.db.models.HuntZone
+import ch.and.pokemonpastropgo.db.models.NotAPokemon
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -24,4 +25,9 @@ interface HuntZoneDAO {
 
     @Query("Select COUNT(*) FROM HuntZone")
     fun getCount(): LiveData<Long>
+
+    @Query("Select * FROM HuntZone  where :id =zoneId")
+    fun getZone(id: Long): LiveData<HuntZone>
+
+
 }

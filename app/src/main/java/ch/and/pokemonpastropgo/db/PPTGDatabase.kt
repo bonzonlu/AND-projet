@@ -45,6 +45,7 @@ abstract  class PPTGDatabase:  RoomDatabase() {
                 if(isEmpty){
                     thread {
                         //TODO populate database
+
                     }
                 }
             }
