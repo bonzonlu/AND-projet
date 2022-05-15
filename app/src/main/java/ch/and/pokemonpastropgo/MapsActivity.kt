@@ -86,8 +86,8 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
             mapsBinding.historyBookFab.startAnimation(rotateCloseAnimation)
             mapsBinding.locationHintFab.startAnimation(toBottomAnimation)
             mapsBinding.locationHintFab.visibility = View.VISIBLE
-            mapsBinding.locationHintFab.isClickable = true
-            mapsBinding.locationHintFab.isFocusable = true
+            //mapsBinding.locationHintFab.isClickable = true
+            //mapsBinding.locationHintFab.isFocusable = true
         } else {
             mapsBinding.historyBookFab.startAnimation(rotateOpenAnimation)
             mapsBinding.locationHintFab.startAnimation(fromBottomAnimation)
