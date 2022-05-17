@@ -23,16 +23,15 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent" />
 
-    <!-- TODO : Handle FABs animations -->
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/location_hint_fab"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentEnd="true"
         android:layout_alignParentBottom="true"
-        android:visibility="invisible"
         android:layout_marginBottom="16dp"
         android:src="@drawable/ic_baseline_location_hint_24"
+        android:visibility="invisible"
         app:layout_constraintBottom_toTopOf="@id/history_book_fab"
         app:layout_constraintEnd_toEndOf="@id/history_book_fab" />
 
@@ -42,8 +41,20 @@
         android:layout_height="wrap_content"
         android:layout_alignParentEnd="true"
         android:layout_alignParentBottom="true"
-        android:layout_margin="16dp"
+        android:layout_marginBottom="16dp"
         android:src="@drawable/ic_baseline_history_book_24"
+        android:visibility="invisible"
+        app:layout_constraintBottom_toTopOf="@id/menu_fab"
+        app:layout_constraintEnd_toEndOf="@id/menu_fab" />
+
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/menu_fab"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentEnd="true"
+        android:layout_alignParentBottom="true"
+        android:layout_margin="16dp"
+        android:src="@drawable/ic_baseline_help_outline_24"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
