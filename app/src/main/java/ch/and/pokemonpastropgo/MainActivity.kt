@@ -3,23 +3,24 @@ package ch.and.pokemonpastropgo
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.widget.Button
+import android.util.Log
 import androidx.activity.viewModels
 import ch.and.pokemonpastropgo.databinding.ActivityMainBinding
-import ch.and.pokemonpastropgo.databinding.ActivityMapsBinding
-import ch.and.pokemonpastropgo.db.PPTGDatabase
 import ch.and.pokemonpastropgo.db.PPTGDatabaseApp
 import ch.and.pokemonpastropgo.viewmodels.HuntZonesViewmodel
+import ch.and.pokemonpastropgo.viewmodels.PokemonToHuntViewModel
 import ch.and.pokemonpastropgo.viewmodels.ViewModelFactory
 
 class MainActivity : AppCompatActivity() {
     lateinit var mainBinding: ActivityMainBinding
 
-    lateinit var vm: HuntZonesViewmodel
-    /*private val vm: HuntZonesViewmodel by viewModels{
+    private val vm: HuntZonesViewmodel by viewModels{
         ViewModelFactory((application as PPTGDatabaseApp).repository)
-    }*/
+    }
 
+    private val toHuntVm: PokemonToHuntViewModel by viewModels{
+        ViewModelFactory((application as PPTGDatabaseApp).repository)
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -32,8 +33,5 @@ class MainActivity : AppCompatActivity() {
             val i = Intent(this, MapsActivity::class.java)
             startActivity(i)
         }
-        vm = HuntZonesViewmodel((application as PPTGDatabaseApp).repository)
-
-
     }
 }

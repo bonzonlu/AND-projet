@@ -1,7 +1,7 @@
 package ch.and.pokemonpastropgo.db
 
 import android.app.Application
-import ch.and.pokemonpastropgo.db.repositories.HuntZoneRepository
+import ch.and.pokemonpastropgo.db.repositories.Repository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
 
@@ -10,7 +10,7 @@ class PPTGDatabaseApp: Application() {
 
     val repository by lazy {
         val database = PPTGDatabase.getDB(this)
-        HuntZoneRepository(database.huntZoneDAO(), applicationScope)
+        Repository(database.huntZoneDAO(),database.notAPokemonDAO(),database.pokemonToHuntDAO(), applicationScope)
     }
 
 }

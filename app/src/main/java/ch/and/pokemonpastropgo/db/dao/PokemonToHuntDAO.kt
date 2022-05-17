@@ -18,6 +18,9 @@ interface PokemonToHuntDAO {
     @Query("Select COUNT(*) FROM PokemonToHunt")
     fun getAllPokemonsToHuntCount(): LiveData<Long>
 
+    @Query("SELECT * FROM PokemonToHunt WHERE PokemonToHunt.zoneId = :id")
+    fun getAllPokemonsToHuntByZone(id: Long): LiveData<PokemonToHunt>
+
     @Query("SELECT COUNT(*) FROM PokemonToHunt WHERE PokemonToHunt.zoneId = :id ")
     fun getPokemonToHuntCountByZone(id: Long): LiveData<Long>
 
