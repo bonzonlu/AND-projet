@@ -2,14 +2,19 @@ package ch.and.pokemonpastropgo.db.dao
 
 import androidx.lifecycle.LiveData
 import androidx.room.*
-import ch.and.pokemonpastropgo.db.models.HuntZone
-import ch.and.pokemonpastropgo.db.models.NotAPokemon
+import ch.and.pokemonpastropgo.db.models.*
 import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface HuntZoneDAO {
     @Insert
-    fun insert(huntZone: HuntZone): Long
+    fun insertAll(vararg huntZone: HuntZone)
+
+    @Insert
+    fun insertAll(vararg huntZoneCrossReff: HuntZoneCrossReff)
+
+    @Insert
+    fun insert(huntZone: HuntZone)
 
     @Update
     fun update(huntZone: HuntZone)
@@ -27,7 +32,5 @@ interface HuntZoneDAO {
     fun getCount(): LiveData<Long>
 
     @Query("Select * FROM HuntZone  where :id =zoneId")
-    fun getZone(id: Long): LiveData<HuntZone>
-
-
+    fun getZone(id: Long): LiveData<PokemonsFromHuntZone>
 }

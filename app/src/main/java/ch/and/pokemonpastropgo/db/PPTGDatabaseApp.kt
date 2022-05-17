@@ -12,4 +12,5 @@ class PPTGDatabaseApp: Application() {
         val database = PPTGDatabase.getDB(this)
         HuntZoneRepository(database.huntZoneDAO(), applicationScope)
     }
+
 }

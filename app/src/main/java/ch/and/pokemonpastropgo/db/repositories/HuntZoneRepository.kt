@@ -21,4 +21,5 @@ class HuntZoneRepository(private val huntZoneDAO: HuntZoneDAO, private val scope
             huntZoneDAO.deleteAll()
         }
     }
+
 }

@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "e1777a73387602e29d57bdc6125750b0",
+    "identityHash": "9c506d75e33823b264fb65e4dcee02cf",
     "entities": [
       {
         "tableName": "HuntZone",
@@ -56,18 +56,77 @@
       },
       {
         "tableName": "NotAPokemon",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER NOT NULL, `name` TEXT NOT NULL, `hint` TEXT NOT NULL, PRIMARY KEY(`id`))",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`pokemonId` TEXT NOT NULL, `description` TEXT NOT NULL, PRIMARY KEY(`pokemonId`))",
         "fields": [
           {
-            "fieldPath": "id",
-            "columnName": "id",
+            "fieldPath": "pokemonId",
+            "columnName": "pokemonId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "description",
+            "columnName": "description",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "columnNames": [
+            "pokemonId"
+          ],
+          "autoGenerate": false
+        },
+        "indices": [],
+        "foreignKeys": []
+      },
+      {
+        "tableName": "HuntZoneCrossReff",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`zoneId` INTEGER NOT NULL, `huntId` INTEGER NOT NULL, PRIMARY KEY(`zoneId`, `huntId`))",
+        "fields": [
+          {
+            "fieldPath": "zoneId",
+            "columnName": "zoneId",
             "affinity": "INTEGER",
             "notNull": true
           },
           {
-            "fieldPath": "name",
-            "columnName": "name",
+            "fieldPath": "huntId",
+            "columnName": "huntId",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "columnNames": [
+            "zoneId",
+            "huntId"
+          ],
+          "autoGenerate": false
+        },
+        "indices": [],
+        "foreignKeys": []
+      },
+      {
+        "tableName": "PokemonToHunt",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`huntId` INTEGER PRIMARY KEY AUTOINCREMENT, `pokemonId` TEXT NOT NULL, `zoneId` INTEGER NOT NULL, `hint` TEXT NOT NULL, `found` INTEGER NOT NULL)",
+        "fields": [
+          {
+            "fieldPath": "huntId",
+            "columnName": "huntId",
+            "affinity": "INTEGER",
+            "notNull": false
+          },
+          {
+            "fieldPath": "pokemonId",
+            "columnName": "pokemonId",
             "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "zoneId",
+            "columnName": "zoneId",
+            "affinity": "INTEGER",
             "notNull": true
           },
           {
@@ -75,13 +134,19 @@
             "columnName": "hint",
             "affinity": "TEXT",
             "notNull": true
+          },
+          {
+            "fieldPath": "found",
+            "columnName": "found",
+            "affinity": "INTEGER",
+            "notNull": true
           }
         ],
         "primaryKey": {
           "columnNames": [
-            "id"
+            "huntId"
           ],
-          "autoGenerate": false
+          "autoGenerate": true
         },
         "indices": [],
         "foreignKeys": []
@@ -90,7 +155,7 @@
     "views": [],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'e1777a73387602e29d57bdc6125750b0')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '9c506d75e33823b264fb65e4dcee02cf')"
     ]
   }
 }

@@ -1,8 +1,6 @@
 package ch.and.pokemonpastropgo.db.repositories;
 
-import ch.and.pokemonpastropgo.db.dao.HuntZoneDAO
 import ch.and.pokemonpastropgo.db.dao.NotAPokemonDAO
-import ch.and.pokemonpastropgo.db.models.HuntZone
 import ch.and.pokemonpastropgo.db.models.NotAPokemon
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers

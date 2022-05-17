@@ -5,7 +5,6 @@ import androidx.room.PrimaryKey
 
 @Entity
 data class NotAPokemon(
-    @PrimaryKey var id: Long,
-    var name: String,
-    var hint: String,
+    @PrimaryKey val pokemonId: String,
+    val description: String
 )
