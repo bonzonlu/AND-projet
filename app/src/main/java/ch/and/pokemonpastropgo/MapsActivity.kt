@@ -45,8 +45,9 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
             startActivity(i)
         }
 
-        mapsBinding.historyBookFab.setOnClickListener { animateFab() }
+        mapsBinding.menuFab.setOnClickListener { animateFab() }
         mapsBinding.locationHintFab.setOnClickListener { Toast.makeText(this@MapsActivity, "Location hint", Toast.LENGTH_SHORT).show() }
+        mapsBinding.historyBookFab.setOnClickListener { Toast.makeText(this@MapsActivity, "History book", Toast.LENGTH_SHORT).show() }
     }
 
     // Handles return arrow button in MapsActivity ActionBar
@@ -83,19 +84,14 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
     private var fabOpen = false
     private fun animateFab() {
         if (fabOpen) {
-            mapsBinding.historyBookFab.startAnimation(rotateCloseAnimation)
+            mapsBinding.menuFab.startAnimation(rotateCloseAnimation)
             mapsBinding.locationHintFab.startAnimation(toBottomAnimation)
-            mapsBinding.locationHintFab.visibility = View.VISIBLE
-            mapsBinding.locationHintFab.isClickable = true
-            mapsBinding.locationHintFab.isFocusable = true
+            mapsBinding.historyBookFab.startAnimation(toBottomAnimation)
         } else {
-            mapsBinding.historyBookFab.startAnimation(rotateOpenAnimation)
+            mapsBinding.menuFab.startAnimation(rotateOpenAnimation)
             mapsBinding.locationHintFab.startAnimation(fromBottomAnimation)
-            /*mapsBinding.locationHintFab.visibility = View.INVISIBLE
-            mapsBinding.locationHintFab.isClickable = false
-            mapsBinding.locationHintFab.isFocusable = false*/
+            mapsBinding.historyBookFab.startAnimation(fromBottomAnimation)
         }
         fabOpen = !fabOpen
-        Toast.makeText(this@MapsActivity, fabOpen.toString(), Toast.LENGTH_SHORT).show()
     }
 }
