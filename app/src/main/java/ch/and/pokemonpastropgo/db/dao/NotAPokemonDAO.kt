@@ -29,6 +29,7 @@ interface NotAPokemonDAO {
 
     @Query("Select COUNT(*) FROM NotAPokemon")
     fun getCount(): LiveData<Long>
+
     @Query("Select * FROM NotAPokemon LEFT JOIN HuntZone ON HuntZone.zoneId = NotAPokemon.pokemonId where HuntZone.zoneId = :id")
     fun getPokemonsFromZone(id: Long): LiveData<PokemonsFromHuntZone>
 

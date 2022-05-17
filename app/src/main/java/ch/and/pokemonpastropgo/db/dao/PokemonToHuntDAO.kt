@@ -25,5 +25,5 @@ interface PokemonToHuntDAO {
     fun getPokemonToHuntCountByZone(id: Long): LiveData<Long>
 
     @Query("SELECT COUNT(*) FROM PokemonToHunt WHERE PokemonToHunt.zoneId = :id AND PokemonToHunt.found=1")
-    fun getPokemonFoundCountByZone(id: Long): LiveData<Long>
+    fun getPokemonFoundCountByZone(id: Long?): LiveData<Long>
 }

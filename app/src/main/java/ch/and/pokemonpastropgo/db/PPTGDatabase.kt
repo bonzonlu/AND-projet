@@ -47,6 +47,7 @@ abstract  class PPTGDatabase:  RoomDatabase() {
             super.onCreate(db)
             INSTANCE?.let{ database ->
                 val isEmpty = database.huntZoneDAO().getCount().value == null &&  database.huntZoneDAO().getCount().value == null
+                Log.d("",isEmpty.toString())
                 if(isEmpty){
                     thread {
                         //TODO populate database

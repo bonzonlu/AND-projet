@@ -26,11 +26,11 @@ interface HuntZoneDAO {
     fun deleteAll()
 
     @Query("Select * FROM HuntZone")
-    fun getAllZones(): Flow<List<HuntZone>>
+    fun getAllZones(): Flow<List<PokemonsFromHuntZone>>
 
     @Query("Select COUNT(*) FROM HuntZone")
     fun getCount(): LiveData<Long>
 
-    @Query("Select * FROM HuntZone  where :id =zoneId")
+    @Query("Select  * FROM HuntZone  where :id =zoneId")
     fun getZone(id: Long): LiveData<PokemonsFromHuntZone>
 }

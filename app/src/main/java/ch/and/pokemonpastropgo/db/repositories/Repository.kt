@@ -7,6 +7,7 @@ import ch.and.pokemonpastropgo.db.dao.PokemonToHuntDAO
 import ch.and.pokemonpastropgo.db.models.HuntZone
 import ch.and.pokemonpastropgo.db.models.NotAPokemon
 import ch.and.pokemonpastropgo.db.models.PokemonToHunt
+import ch.and.pokemonpastropgo.db.models.PokemonsFromHuntZone
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -63,7 +64,11 @@ class Repository(
         return pokemonToHuntDAO.getPokemonToHuntCountByZone(id)
     }
 
-    fun pokemonsFoundCntByZone(id: Long): LiveData<Long> {
+    fun pokemonsFoundCntByZone(id: Long?): LiveData<Long> {
         return pokemonToHuntDAO.getPokemonFoundCountByZone(id)
+    }
+
+    fun getZone(id: Long):LiveData<PokemonsFromHuntZone>{
+        return huntZoneDAO.getZone(id)
     }
 }
