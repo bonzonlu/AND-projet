@@ -1,5 +1,6 @@
 package ch.and.pokemonpastropgo.RecyclerViews
 
+import android.annotation.SuppressLint
 import android.content.Intent
 import android.view.LayoutInflater
 import android.view.View
@@ -12,8 +13,9 @@ import ch.and.pokemonpastropgo.MapsActivity
 import ch.and.pokemonpastropgo.R
 import ch.and.pokemonpastropgo.db.models.PokemonsFromHuntZone
 import ch.and.pokemonpastropgo.viewmodels.HuntZonesViewmodel
+import ch.and.pokemonpastropgo.viewmodels.PokemonToHuntViewModel
 
-class ZoneListRecyclerAdapter(private val model: HuntZonesViewmodel,
+class ZoneListRecyclerAdapter(private val model: PokemonToHuntViewModel,
                               private val context: AppCompatActivity,
                               _items: List<PokemonsFromHuntZone> = listOf()) : RecyclerView.Adapter<ZoneListRecyclerAdapter.ViewHolder>() {
     var items = listOf<PokemonsFromHuntZone>()
@@ -37,7 +39,7 @@ class ZoneListRecyclerAdapter(private val model: HuntZonesViewmodel,
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-        model.countFound(items[position].huntZone.zoneId).observe(context){
+        model.pokemonsFoundCntByZone(items[position].huntZone.zoneId!!).observe(context){
             holder.bind(items[position],it)
         }
     }
@@ -54,7 +56,7 @@ class ZoneListRecyclerAdapter(private val model: HuntZonesViewmodel,
                 context.startActivity(i)
             }
             zoneTitle.text = zone.huntZone.title
-            zonePokemonCount.text = count.toString()+"/"+zone.notPokemons.size
+            zonePokemonCount.text = context.getString(R.string.found_pokemons,count,zone.notPokemons.size)
 
         }
     }

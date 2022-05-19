@@ -6,6 +6,7 @@ import ch.and.pokemonpastropgo.db.models.HuntZoneCrossReff
 import ch.and.pokemonpastropgo.db.models.NotAPokemon
 import ch.and.pokemonpastropgo.db.models.PokemonsFromHuntZone
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.StateFlow
 
 @Dao
 interface NotAPokemonDAO {
@@ -28,6 +29,6 @@ interface NotAPokemonDAO {
     fun getAllPokemons(): Flow<List<NotAPokemon>>
 
     @Query("Select COUNT(*) FROM NotAPokemon")
-    fun getCount(): LiveData<Long>
+    fun getCount(): Flow<Long>
     
 }

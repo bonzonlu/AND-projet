@@ -22,6 +22,7 @@ import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.LatLngBounds
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 
 class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
@@ -34,7 +35,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
     private val toBottomAnimation: Animation by lazy { AnimationUtils.loadAnimation(this, R.anim.to_bottom_animation) }
 
     private val toHuntVm: PokemonToHuntViewModel by viewModels{
-        ViewModelFactory((application as PPTGDatabaseApp).repository)
+        ViewModelFactory((application as PPTGDatabaseApp).pokemonToHuntRepository)
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -59,8 +60,10 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         mapsBinding.historyBookFab.setOnClickListener { animateFab() }
         mapsBinding.locationHintFab.setOnClickListener { Toast.makeText(this@MapsActivity, "Location hint", Toast.LENGTH_SHORT).show() }
 
-        toHuntVm.pokemonsToHuntByZone(intent.getLongExtra("zoneId",-1)).observe(this){
-            Log.d("",it.size.toString())
+        lifecycleScope.launch{
+            toHuntVm.pokemonsToHuntByZone(intent.getLongExtra("zoneId",-1)).collect {
+                Log.d("",it.size.toString())
+            }
         }
 
     }

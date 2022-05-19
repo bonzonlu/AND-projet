@@ -6,6 +6,7 @@ import androidx.room.Insert
 import androidx.room.Query
 import ch.and.pokemonpastropgo.db.models.PokemonToHunt
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.StateFlow
 
 @Dao
 interface PokemonToHuntDAO {
@@ -16,7 +17,7 @@ interface PokemonToHuntDAO {
     fun getAllPokemonsToHunt(): Flow<List<PokemonToHunt>>
 
     @Query("SELECT * FROM PokemonToHunt WHERE PokemonToHunt.zoneId = :id")
-    fun getAllPokemonsToHuntByZone(id: Long): LiveData<List<PokemonToHunt>>
+    fun getAllPokemonsToHuntByZone(id: Long): Flow<List<PokemonToHunt>>
 
     @Query("Select COUNT(*) FROM PokemonToHunt")
     fun getAllPokemonsToHuntCount(): LiveData<Long>

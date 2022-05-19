@@ -3,6 +3,7 @@ package ch.and.pokemonpastropgo
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -20,11 +21,11 @@ class MainActivity : AppCompatActivity() {
     lateinit var mainBinding: ActivityMainBinding
 
     private val vm: HuntZonesViewmodel by viewModels{
-        ViewModelFactory((application as PPTGDatabaseApp).repository)
+        ViewModelFactory((application as PPTGDatabaseApp).huntZoneRepository)
     }
 
     private val toHuntVm: PokemonToHuntViewModel by viewModels{
-        ViewModelFactory((application as PPTGDatabaseApp).repository)
+        ViewModelFactory((application as PPTGDatabaseApp).pokemonToHuntRepository)
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -40,7 +41,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         val recyclle = findViewById<RecyclerView>(R.id.zone_recycler_view)
-        val adapter = ZoneListRecyclerAdapter(vm,this)
+        val adapter = ZoneListRecyclerAdapter(toHuntVm,this)
 
         recyclle.adapter = adapter
         recyclle.layoutManager  = LinearLayoutManager(this)
@@ -49,6 +50,9 @@ class MainActivity : AppCompatActivity() {
             vm.allZones.collect {
                 adapter.items = it
             }
+        }
+        vm.zoneCount.observe(this){
+            Log.d("Zone count",it.toString())
         }
     }
 }
