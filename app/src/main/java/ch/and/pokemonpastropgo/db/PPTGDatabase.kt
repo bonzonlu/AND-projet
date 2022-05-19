@@ -46,7 +46,7 @@ abstract  class PPTGDatabase:  RoomDatabase() {
         override fun onCreate(db: SupportSQLiteDatabase) {
             super.onCreate(db)
             INSTANCE?.let{ database ->
-                val isEmpty = database.huntZoneDAO().getCount().value == null &&  database.huntZoneDAO().getCount().value == null
+                val isEmpty = database.huntZoneDAO().getAllZonesCount().value == null &&  database.huntZoneDAO().getAllZonesCount().value == null
                 Log.d("",isEmpty.toString())
                 if(isEmpty){
                     thread {

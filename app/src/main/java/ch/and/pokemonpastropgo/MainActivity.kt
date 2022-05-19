@@ -1,16 +1,13 @@
 package ch.and.pokemonpastropgo
 
-import android.content.Context
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.util.AttributeSet
-import android.util.Log
-import android.view.View
 import androidx.activity.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import ch.and.pokemonpastropgo.RecyclerViews.ZoneListRecyclerAdapter
 import ch.and.pokemonpastropgo.databinding.ActivityMainBinding
 import ch.and.pokemonpastropgo.db.PPTGDatabaseApp
 import ch.and.pokemonpastropgo.viewmodels.HuntZonesViewmodel
@@ -43,7 +40,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         val recyclle = findViewById<RecyclerView>(R.id.zone_recycler_view)
-        val adapter = ItemRecyclerAdapter(vm,this)
+        val adapter = ZoneListRecyclerAdapter(vm,this)
 
         recyclle.adapter = adapter
         recyclle.layoutManager  = LinearLayoutManager(this)

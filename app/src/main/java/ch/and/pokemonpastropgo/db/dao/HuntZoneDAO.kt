@@ -29,7 +29,7 @@ interface HuntZoneDAO {
     fun getAllZones(): Flow<List<PokemonsFromHuntZone>>
 
     @Query("Select COUNT(*) FROM HuntZone")
-    fun getCount(): LiveData<Long>
+    fun getAllZonesCount(): LiveData<Long>
 
     @Query("Select  * FROM HuntZone  where :id =zoneId")
     fun getZone(id: Long): LiveData<PokemonsFromHuntZone>

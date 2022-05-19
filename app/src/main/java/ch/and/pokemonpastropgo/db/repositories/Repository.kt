@@ -20,12 +20,12 @@ class Repository(
     private val scope: CoroutineScope) {
 
     val allZones = huntZoneDAO.getAllZones().distinctUntilChanged()
-    val allZonesCount = huntZoneDAO.getCount()
+    val allZonesCount = huntZoneDAO.getAllZonesCount()
 
     val allPokemonsToHunt =  pokemonToHuntDAO.getAllPokemonsToHunt()
     val allPokemonsToHuntCount = pokemonToHuntDAO.getAllPokemonsToHuntCount()
 
-    val allPokemons = notAPokemonDAO.getAllZones()
+    val allPokemons = notAPokemonDAO.getAllPokemons()
     val allPokemonCount = notAPokemonDAO.getCount()
 
 
@@ -41,14 +41,11 @@ class Repository(
         }
     }
 
-
     fun insertPokemon(pokemon: NotAPokemon){
         scope.launch(Dispatchers.IO) {
             notAPokemonDAO.insert(pokemon)
         }
     }
-
-
 
     fun insertPokemonToHunt(pokemonToHunt: PokemonToHunt){
         scope.launch(Dispatchers.IO) {
@@ -56,7 +53,7 @@ class Repository(
         }
     }
 
-    fun pokemonsToHuntByZone(id: Long): LiveData<PokemonToHunt>{
+    fun pokemonsToHuntByZone(id: Long): LiveData<List<PokemonToHunt>>{
         return pokemonToHuntDAO.getAllPokemonsToHuntByZone(id)
     }
 

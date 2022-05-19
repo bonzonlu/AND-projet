@@ -15,14 +15,14 @@ interface PokemonToHuntDAO {
     @Query("Select * FROM PokemonToHunt")
     fun getAllPokemonsToHunt(): Flow<List<PokemonToHunt>>
 
+    @Query("SELECT * FROM PokemonToHunt WHERE PokemonToHunt.zoneId = :id")
+    fun getAllPokemonsToHuntByZone(id: Long): LiveData<List<PokemonToHunt>>
+
     @Query("Select COUNT(*) FROM PokemonToHunt")
     fun getAllPokemonsToHuntCount(): LiveData<Long>
 
-    @Query("SELECT * FROM PokemonToHunt WHERE PokemonToHunt.zoneId = :id")
-    fun getAllPokemonsToHuntByZone(id: Long): LiveData<PokemonToHunt>
-
     @Query("SELECT COUNT(*) FROM PokemonToHunt WHERE PokemonToHunt.zoneId = :id ")
-    fun getPokemonToHuntCountByZone(id: Long): LiveData<Long>
+    fun getPokemonToHuntCountByZone(id: Long?): LiveData<Long>
 
     @Query("SELECT COUNT(*) FROM PokemonToHunt WHERE PokemonToHunt.zoneId = :id AND PokemonToHunt.found=1")
     fun getPokemonFoundCountByZone(id: Long?): LiveData<Long>

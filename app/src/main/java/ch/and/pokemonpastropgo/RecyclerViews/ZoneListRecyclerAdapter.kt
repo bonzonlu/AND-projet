@@ -1,29 +1,24 @@
-package ch.and.pokemonpastropgo
+package ch.and.pokemonpastropgo.RecyclerViews
 
+import android.content.Intent
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.ImageView
 import android.widget.TextView
-import androidx.lifecycle.LifecycleOwner
+import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
-import ch.and.pokemonpastropgo.db.models.HuntZone
+import ch.and.pokemonpastropgo.MapsActivity
+import ch.and.pokemonpastropgo.R
 import ch.and.pokemonpastropgo.db.models.PokemonsFromHuntZone
 import ch.and.pokemonpastropgo.viewmodels.HuntZonesViewmodel
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.launch
-import java.time.LocalDateTime
-import java.time.ZoneId
-import java.time.temporal.ChronoUnit
-import java.util.*
-import kotlin.coroutines.coroutineContext
 
-class ItemRecyclerAdapter(private val model: HuntZonesViewmodel,private val lifecycleOwner: LifecycleOwner, _items: List<PokemonsFromHuntZone> = listOf()) : RecyclerView.Adapter<ItemRecyclerAdapter.ViewHolder>() {
+class ZoneListRecyclerAdapter(private val model: HuntZonesViewmodel,
+                              private val context: AppCompatActivity,
+                              _items: List<PokemonsFromHuntZone> = listOf()) : RecyclerView.Adapter<ZoneListRecyclerAdapter.ViewHolder>() {
     var items = listOf<PokemonsFromHuntZone>()
         set(value) {
-            val diffCallback = ZonesDiffCallback(items, value)
+            val diffCallback = ZoneListDiffCallback(items, value)
             val diffItems = DiffUtil.calculateDiff(diffCallback)
             field = value
             diffItems.dispatchUpdatesTo(this)
@@ -42,15 +37,22 @@ class ItemRecyclerAdapter(private val model: HuntZonesViewmodel,private val life
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-        model.countFound(items[position].huntZone.zoneId).observe(lifecycleOwner){
+        model.countFound(items[position].huntZone.zoneId).observe(context){
             holder.bind(items[position],it)
         }
     }
 
-    inner class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
+    inner class ViewHolder(private val view: View) : RecyclerView.ViewHolder(view) {
         private val zoneTitle = view.findViewById<TextView>(R.id.zone_title)
         private val zonePokemonCount = view.findViewById<TextView>(R.id.count)
+
+
         fun bind(zone: PokemonsFromHuntZone, count: Long){
+            view.setOnClickListener {
+                val i = Intent(context, MapsActivity::class.java)
+                i.putExtra("zoneId",zone.huntZone.zoneId)
+                context.startActivity(i)
+            }
             zoneTitle.text = zone.huntZone.title
             zonePokemonCount.text = count.toString()+"/"+zone.notPokemons.size
 

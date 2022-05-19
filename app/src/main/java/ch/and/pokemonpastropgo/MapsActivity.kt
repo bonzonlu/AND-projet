@@ -2,19 +2,27 @@ package ch.and.pokemonpastropgo
 
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.view.MenuItem
 import android.view.View
 import android.view.animation.Animation
 import android.view.animation.AnimationUtils
 import android.widget.Toast
+import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.lifecycleScope
 import ch.and.pokemonpastropgo.databinding.ActivityMapsBinding
+import ch.and.pokemonpastropgo.db.PPTGDatabaseApp
+import ch.and.pokemonpastropgo.viewmodels.HuntZonesViewmodel
+import ch.and.pokemonpastropgo.viewmodels.PokemonToHuntViewModel
+import ch.and.pokemonpastropgo.viewmodels.ViewModelFactory
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.LatLngBounds
+import kotlinx.coroutines.launch
 
 class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
     private lateinit var mMap: GoogleMap
@@ -25,6 +33,9 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
     private val fromBottomAnimation: Animation by lazy { AnimationUtils.loadAnimation(this, R.anim.from_bottom_animation) }
     private val toBottomAnimation: Animation by lazy { AnimationUtils.loadAnimation(this, R.anim.to_bottom_animation) }
 
+    private val toHuntVm: PokemonToHuntViewModel by viewModels{
+        ViewModelFactory((application as PPTGDatabaseApp).repository)
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -47,6 +58,11 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
 
         mapsBinding.historyBookFab.setOnClickListener { animateFab() }
         mapsBinding.locationHintFab.setOnClickListener { Toast.makeText(this@MapsActivity, "Location hint", Toast.LENGTH_SHORT).show() }
+
+        toHuntVm.pokemonsToHuntByZone(intent.getLongExtra("zoneId",-1)).observe(this){
+            Log.d("",it.size.toString())
+        }
+
     }
 
     // Handles return arrow button in MapsActivity ActionBar
@@ -77,7 +93,9 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         val LausanneYverdonBounds = LatLngBounds(sw, ne)
 
         // Moves the camera to show the entire area of interest
-        mMap.moveCamera(CameraUpdateFactory.newLatLngBounds(LausanneYverdonBounds, 200));
+        mMap.setOnMapLoadedCallback {
+            mMap.moveCamera(CameraUpdateFactory.newLatLngBounds(LausanneYverdonBounds, 200));
+        }
     }
 
     private var fabOpen = false

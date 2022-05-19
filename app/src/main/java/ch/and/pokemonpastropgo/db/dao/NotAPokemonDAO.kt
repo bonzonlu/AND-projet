@@ -25,12 +25,9 @@ interface NotAPokemonDAO {
     fun deleteAll()
 
     @Query("Select * FROM NotAPokemon")
-    fun getAllZones(): Flow<List<NotAPokemon>>
+    fun getAllPokemons(): Flow<List<NotAPokemon>>
 
     @Query("Select COUNT(*) FROM NotAPokemon")
     fun getCount(): LiveData<Long>
-
-    @Query("Select * FROM NotAPokemon LEFT JOIN HuntZone ON HuntZone.zoneId = NotAPokemon.pokemonId where HuntZone.zoneId = :id")
-    fun getPokemonsFromZone(id: Long): LiveData<PokemonsFromHuntZone>
-
+    
 }

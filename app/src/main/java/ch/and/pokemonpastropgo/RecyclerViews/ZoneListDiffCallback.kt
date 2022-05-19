@@ -1,10 +1,10 @@
-package ch.and.pokemonpastropgo
+package ch.and.pokemonpastropgo.RecyclerViews
 
 import androidx.recyclerview.widget.DiffUtil
 import ch.and.pokemonpastropgo.db.models.HuntZone
 import ch.and.pokemonpastropgo.db.models.PokemonsFromHuntZone
 
-class ZonesDiffCallback (private val oldList: List<PokemonsFromHuntZone>, private val newList: List<PokemonsFromHuntZone>) : DiffUtil.Callback() {
+class ZoneListDiffCallback (private val oldList: List<PokemonsFromHuntZone>, private val newList: List<PokemonsFromHuntZone>) : DiffUtil.Callback() {
     override fun getOldListSize() = oldList.size
     override fun getNewListSize() = newList.size
     override fun areItemsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean {

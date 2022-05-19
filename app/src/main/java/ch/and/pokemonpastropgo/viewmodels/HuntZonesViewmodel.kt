@@ -9,6 +9,7 @@ import ch.and.pokemonpastropgo.db.repositories.Repository
 class HuntZonesViewmodel(private val repository: Repository): ViewModel() {
     val allZones = repository.allZones
     val zoneCount = repository.allZonesCount
+
     fun createZone(title: String, description: String, lat: Double, lng: Double, radius: Double){
         val zone = HuntZone(
             null,
@@ -21,7 +22,7 @@ class HuntZonesViewmodel(private val repository: Repository): ViewModel() {
         repository.insertZone(zone)
     }
 
-    fun zone(id:Long): LiveData<PokemonsFromHuntZone>{
+    fun getZone(id:Long): LiveData<PokemonsFromHuntZone>{
         return repository.getZone(id)
     }
     fun deleteAllZones(){
