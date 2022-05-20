@@ -9,5 +9,7 @@ data class PokemonToHunt(
     val pokemonId: String,
     val zoneId: Long,
     val hint: String,
-    val found: Boolean
+    val found: Boolean,
+    val lat: Double,
+    val lng: Double
 )

@@ -6,6 +6,7 @@ import ch.and.pokemonpastropgo.db.models.PokemonToHunt
 import ch.and.pokemonpastropgo.db.repositories.BaseRepository
 import ch.and.pokemonpastropgo.db.repositories.PokemonToHuntRepository
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.distinctUntilChanged
 
 class PokemonToHuntViewModel(rep: BaseRepository): ViewModel() {
 
@@ -22,7 +23,7 @@ class PokemonToHuntViewModel(rep: BaseRepository): ViewModel() {
     }
 
     fun pokemonsToHuntByZone(id: Long): Flow<List<PokemonToHunt>>{
-        return repository.pokemonsToHuntByZone(id)
+        return repository.pokemonsToHuntByZone(id).distinctUntilChanged()
     }
 
 
