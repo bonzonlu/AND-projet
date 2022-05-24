@@ -40,11 +40,11 @@ class MainActivity : AppCompatActivity() {
             startActivity(i)
         }
 
-        val recyclle = findViewById<RecyclerView>(R.id.zone_recycler_view)
+        val recyclerView = findViewById<RecyclerView>(R.id.zone_recycler_view)
         val adapter = ZoneListRecyclerAdapter(toHuntVm, this)
 
-        recyclle.adapter = adapter
-        recyclle.layoutManager = LinearLayoutManager(this)
+        recyclerView.adapter = adapter
+        recyclerView.layoutManager = LinearLayoutManager(this)
 
         lifecycleScope.launch {
             vm.allZones.collect {
