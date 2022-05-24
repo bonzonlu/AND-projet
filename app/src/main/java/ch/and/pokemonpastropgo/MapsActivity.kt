@@ -10,19 +10,24 @@ import android.content.pm.PackageManager.PERMISSION_GRANTED
 import android.graphics.Color
 import android.content.pm.PackageManager
 import android.location.Location
-import android.os.Build
 import android.os.Bundle
-import android.os.Looper
 import android.util.Log
+import android.os.Looper
 import android.view.MenuItem
 import android.view.animation.Animation
 import android.view.animation.AnimationUtils
 import android.widget.Toast
+import androidx.activity.viewModels
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.lifecycleScope
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import ch.and.pokemonpastropgo.databinding.ActivityMapsBinding
+import ch.and.pokemonpastropgo.db.PPTGDatabaseApp
+import ch.and.pokemonpastropgo.viewmodels.HuntZonesViewmodel
+import ch.and.pokemonpastropgo.viewmodels.PokemonToHuntViewModel
+import ch.and.pokemonpastropgo.viewmodels.ViewModelFactory
 import ch.and.pokemonpastropgo.geofencing.GeofenceBroadcastReceiver
 import ch.and.pokemonpastropgo.geofencing.createChannel
 import com.google.android.gms.common.api.ResolvableApiException
@@ -40,9 +45,10 @@ import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.CircleOptions
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.LatLngBounds
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.launch
 import com.google.android.gms.maps.model.*
-
-import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.location.LocationRequest
 
 // https://github.com/brandy-kay/GeofencingDemo/tree/master/app/src/main/java/com/adhanjadevelopers/geofencingdemo
 private const val TAG = "MapsActivity"
@@ -65,6 +71,9 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
     private val fromBottomAnimation: Animation by lazy { AnimationUtils.loadAnimation(this, R.anim.from_bottom_animation) }
     private val toBottomAnimation: Animation by lazy { AnimationUtils.loadAnimation(this, R.anim.to_bottom_animation) }
 
+    private val toHuntVm: PokemonToHuntViewModel by viewModels {
+        ViewModelFactory((application as PPTGDatabaseApp).pokemonToHuntRepository)
+    }
     private val gadgetQ = android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q
 
     private val geofenceIntent: PendingIntent by lazy {
@@ -140,6 +149,13 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
 
         mapsBinding.menuFab.setOnClickListener { animateFab() }
         mapsBinding.locationHintFab.setOnClickListener { Toast.makeText(this@MapsActivity, "Location hint", Toast.LENGTH_SHORT).show() }
+
+        lifecycleScope.launch {
+            toHuntVm.pokemonsToHuntByZone(intent.getLongExtra("zoneId", -1)).collect {
+                Log.d("", it.size.toString())
+            }
+        }
+
         mapsBinding.historyBookFab.setOnClickListener { Toast.makeText(this@MapsActivity, "History book", Toast.LENGTH_SHORT).show() }
 
         supportActionBar?.title = "Map Location Activity"
@@ -178,9 +194,11 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         val LausanneYverdonBounds = LatLngBounds(sw, ne)
 
         // Moves the camera to show the entire area of interest
-        mMap.moveCamera(CameraUpdateFactory.newLatLngBounds(LausanneYverdonBounds, 200))
+        mMap.setOnMapLoadedCallback {
+            mMap.moveCamera(CameraUpdateFactory.newLatLngBounds(LausanneYverdonBounds, 200))
+        }
 
-        var circleOptions = CircleOptions()
+        val circleOptions = CircleOptions()
             .center(LatLng(YVERDON_LAT, YVERDON_LON))
             .radius(YVERDON_RAD.toDouble())
             .fillColor(0x40ff0000).strokeColor(Color.TRANSPARENT)
