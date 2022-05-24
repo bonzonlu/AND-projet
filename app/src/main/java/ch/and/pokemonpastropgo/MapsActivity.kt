@@ -3,17 +3,22 @@ package ch.and.pokemonpastropgo
 import android.Manifest
 import android.annotation.TargetApi
 import android.app.PendingIntent
+import android.annotation.SuppressLint
 import android.content.Intent
 import android.content.IntentSender
-import android.content.pm.PackageManager
 import android.content.pm.PackageManager.PERMISSION_GRANTED
 import android.graphics.Color
+import android.content.pm.PackageManager
+import android.location.Location
+import android.os.Build
 import android.os.Bundle
+import android.os.Looper
 import android.util.Log
 import android.view.MenuItem
 import android.view.animation.Animation
 import android.view.animation.AnimationUtils
 import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
@@ -22,6 +27,12 @@ import ch.and.pokemonpastropgo.geofencing.GeofenceBroadcastReceiver
 import ch.and.pokemonpastropgo.geofencing.createChannel
 import com.google.android.gms.common.api.ResolvableApiException
 import com.google.android.gms.location.*
+import com.google.android.gms.location.FusedLocationProviderClient
+import com.google.android.gms.location.LocationCallback
+import com.google.android.gms.location.LocationRequest.PRIORITY_BALANCED_POWER_ACCURACY
+import com.google.android.gms.location.LocationRequest.create
+import com.google.android.gms.location.LocationResult
+import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
@@ -29,6 +40,9 @@ import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.CircleOptions
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.LatLngBounds
+import com.google.android.gms.maps.model.*
+
+import com.google.android.gms.location.LocationRequest;
 
 // https://github.com/brandy-kay/GeofencingDemo/tree/master/app/src/main/java/com/adhanjadevelopers/geofencingdemo
 private const val TAG = "MapsActivity"
@@ -53,6 +67,38 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
     private val geofenceIntent: PendingIntent by lazy {
         val intent = Intent(this, GeofenceBroadcastReceiver::class.java)
         PendingIntent.getBroadcast(this, 0, intent, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
+    }
+
+    var mapFrag: SupportMapFragment? = null
+    lateinit var mLocationRequest: LocationRequest
+    var mLastLocation: Location? = null
+    internal var mCurrLocationMarker: Marker? = null
+    internal var mFusedLocationClient: FusedLocationProviderClient? = null
+
+    internal var mLocationCallback: LocationCallback = object : LocationCallback() {
+        override fun onLocationResult(locationResult: LocationResult) {
+            val locationList = locationResult.locations
+            if (locationList.isNotEmpty()) {
+                //The last location in the list is the newest
+                val location = locationList.last()
+                Log.i("MapsActivity", "Location: " + location.getLatitude() + " " + location.getLongitude())
+                mLastLocation = location
+                if (mCurrLocationMarker != null) {
+                    mCurrLocationMarker?.remove()
+                }
+
+                //Place current location marker
+                val latLng = LatLng(location.latitude, location.longitude)
+                val markerOptions = MarkerOptions()
+                markerOptions.position(latLng)
+                markerOptions.title("Current Position")
+                markerOptions.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_MAGENTA))
+                mCurrLocationMarker = mMap.addMarker(markerOptions)
+
+                //move map camera
+                //mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, 11.0F))
+            }
+        }
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -96,7 +142,22 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         mapsBinding.menuFab.setOnClickListener { animateFab() }
         mapsBinding.locationHintFab.setOnClickListener { Toast.makeText(this@MapsActivity, "Location hint", Toast.LENGTH_SHORT).show() }
         mapsBinding.historyBookFab.setOnClickListener { Toast.makeText(this@MapsActivity, "History book", Toast.LENGTH_SHORT).show() }
+
+        supportActionBar?.title = "Map Location Activity"
+
+        mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
+
+        mapFrag = supportFragmentManager.findFragmentById(R.id.map) as SupportMapFragment?
+        mapFrag?.getMapAsync(this)
     }
+
+    public override fun onPause() {
+        super.onPause()
+
+        //stop location updates when Activity is no longer active
+        mFusedLocationClient?.removeLocationUpdates(mLocationCallback)
+    }
+
 
     /**
      * Manipulates the map once available.
@@ -106,6 +167,8 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
      * it inside the SupportMapFragment. This method will only be triggered once the user has
      * installed Google Play services and returned to the app.
      */
+
+    //@SuppressLint("MissingPermission")
     override fun onMapReady(googleMap: GoogleMap) {
         mMap = googleMap
 
@@ -125,12 +188,138 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
             .strokeWidth(2F)
 
         mMap.addCircle(circleOptions)
+
+        //mMap.mapType = GoogleMap.MAP_TYPE_HYBRID
+
+
+        mLocationRequest = LocationRequest().apply {
+            interval = 100
+            fastestInterval = 50
+            priority = LocationRequest.PRIORITY_HIGH_ACCURACY
+            maxWaitTime = 100
+        }
+
+        if (ContextCompat.checkSelfPermission(
+                this,
+                Manifest.permission.ACCESS_FINE_LOCATION
+            ) == PERMISSION_GRANTED
+        ) {
+            //Location Permission already granted
+            mFusedLocationClient?.requestLocationUpdates(mLocationRequest, mLocationCallback, Looper.myLooper()!!)
+            mMap.isMyLocationEnabled = true
+        } else {
+            //Request Location Permission
+            checkLocationPermission()
+        }
+    }
+
+    private fun checkLocationPermission() {
+        if (ActivityCompat.checkSelfPermission(
+                this,
+                Manifest.permission.ACCESS_FINE_LOCATION
+            ) != PERMISSION_GRANTED
+        ) {
+            // Should we show an explanation?
+            if (ActivityCompat.shouldShowRequestPermissionRationale(
+                    this,
+                    Manifest.permission.ACCESS_FINE_LOCATION
+                )
+            ) {
+                // Show an explanation to the user *asynchronously* -- don't block
+                // this thread waiting for the user's response! After the user
+                // sees the explanation, try again to request the permission.
+                AlertDialog.Builder(this)
+                    .setTitle("Location Permission Needed")
+                    .setMessage("This app needs the Location permission, please accept to use location functionality")
+                    .setPositiveButton(
+                        "OK"
+                    ) { _, _ ->
+                        //Prompt the user once explanation has been shown
+                        ActivityCompat.requestPermissions(
+                            this@MapsActivity,
+                            arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
+                            MY_PERMISSIONS_REQUEST_LOCATION
+                        )
+                    }
+                    .create()
+                    .show()
+
+
+            } else {
+                // No explanation needed, we can request the permission.
+                ActivityCompat.requestPermissions(
+                    this,
+                    arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
+                    MY_PERMISSIONS_REQUEST_LOCATION
+                )
+            }
+        }
+    }
+
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<String>,
+        grantResults: IntArray
+    ) {
+        when (requestCode) {
+            // Geolocation
+            MY_PERMISSIONS_REQUEST_LOCATION -> {
+                // If request is cancelled, the result arrays are empty
+                if (grantResults.isNotEmpty() && grantResults[0] == PERMISSION_GRANTED) {
+                    // Permission was granted, yay! Do the location-related task you need to do
+                    if (ContextCompat.checkSelfPermission(
+                            this,
+                            Manifest.permission.ACCESS_FINE_LOCATION
+                        ) == PERMISSION_GRANTED
+                    ) {
+                        // TODO : ERROR
+                        /*
+                        mFusedLocationClient?.requestLocationUpdates(
+                            mLocationRequest,
+                            mLocationCallback,
+                            Looper.myLooper()
+                        )
+                        mMap.setMyLocationEnabled(true)
+                        */
+                    }
+                } else {
+                    // Permission denied, boo! Disable the functionality that depends on that permission
+                    Toast.makeText(this, "permission denied", Toast.LENGTH_LONG).show()
+                }
+                return
+            }
+            // Geofencing
+            REQUEST_LOCATION_PERMISSION -> {
+                if (grantResults.isNotEmpty() && (grantResults[0] == PERMISSION_GRANTED))
+                    startLocation()
+            }
+        }
+        // other 'case' lines to check for other
+        // permissions this app might request
+    }
+
+    /*
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray
+    ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        if (requestCode == REQUEST_LOCATION_PERMISSION) {
+            if (grantResults.size > 0 && (grantResults[0] == PackageManager.PERMISSION_GRANTED))
+                startLocation()
+        }
+    }
+    */
+
+    companion object {
+        val MY_PERMISSIONS_REQUEST_LOCATION = 99
     }
 
     private fun isPermissionGranted(): Boolean {
         return ContextCompat.checkSelfPermission(
             this, Manifest.permission.ACCESS_FINE_LOCATION
-        ) === PackageManager.PERMISSION_GRANTED
+        ) === PERMISSION_GRANTED
     }
 
     private fun startLocation() {
@@ -138,7 +327,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
             if (ActivityCompat.checkSelfPermission(
                     this,
                     Manifest.permission.ACCESS_FINE_LOCATION
-                ) != PackageManager.PERMISSION_GRANTED
+                ) != PERMISSION_GRANTED
             ) {
                 return
             }
@@ -164,7 +353,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         if (ActivityCompat.checkSelfPermission(
                 this,
                 Manifest.permission.ACCESS_FINE_LOCATION
-            ) != PackageManager.PERMISSION_GRANTED
+            ) != PERMISSION_GRANTED
         ) {
             return
         }
@@ -258,7 +447,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
                         REQUEST_TURN_DEVICE_LOCATION_ON
                     )
                 } catch (sendEx: IntentSender.SendIntentException) {
-                    Log.d(TAG, "Error geting location settings resolution: " + sendEx.message)
+                    Log.d(TAG, "Error getting location settings resolution: " + sendEx.message)
                 }
             } else {
                 Toast.makeText(this, "Enable your location", Toast.LENGTH_SHORT).show()
@@ -271,17 +460,6 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         }
     }
 
-    override fun onRequestPermissionsResult(
-        requestCode: Int,
-        permissions: Array<out String>,
-        grantResults: IntArray
-    ) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        if (requestCode == REQUEST_LOCATION_PERMISSION) {
-            if (grantResults.size > 0 && (grantResults[0] == PackageManager.PERMISSION_GRANTED))
-                startLocation()
-        }
-    }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
@@ -308,6 +486,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         }
     }
 
+    // Floating Action Button
     private var fabOpen = false
     private fun animateFab() {
         if (fabOpen) {
