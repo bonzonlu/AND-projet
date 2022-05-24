@@ -10,7 +10,7 @@ import com.google.android.gms.location.Geofence
 import com.google.android.gms.location.GeofenceStatusCodes
 import com.google.android.gms.location.GeofencingEvent
 
-private const val TAG = "GeofenceBroadcastReceiv"
+private const val TAG = "GeofenceBroadcastReceiver"
 
 class GeofenceBroadcastReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context?, intent: Intent?) {
@@ -38,6 +38,8 @@ class GeofenceBroadcastReceiver : BroadcastReceiver() {
                 context!!,
                 NotificationManager::class.java
             ) as NotificationManager
+
+            Log.d(TAG, "ENTER TRANSITION")
 
             notificationManager.sendGeofenceEnteredNotification(context)
         } else {

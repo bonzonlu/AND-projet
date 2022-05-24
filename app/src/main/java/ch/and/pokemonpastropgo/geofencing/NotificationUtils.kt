@@ -9,19 +9,16 @@ import androidx.core.app.NotificationCompat
 import ch.and.pokemonpastropgo.MapsActivity
 import ch.and.pokemonpastropgo.R
 
-
 private const val NOTIFICATION_ID = 33
 private const val CHANNEL_ID = "GeofenceChannel"
 
 fun createChannel(context: Context) {
-    val notificationChannel =
-        NotificationChannel(CHANNEL_ID, "Channel1", NotificationManager.IMPORTANCE_HIGH)
+    val notificationChannel = NotificationChannel(CHANNEL_ID, "Channel1", NotificationManager.IMPORTANCE_HIGH)
     val notificationManager = context.getSystemService(NotificationManager::class.java)
     notificationManager.createNotificationChannel(notificationChannel)
 }
 
 fun NotificationManager.sendGeofenceEnteredNotification(context: Context) {
-
     //Opening the Notification
     val contentIntent = Intent(context, MapsActivity::class.java)
     val contentPendingIntent = PendingIntent.getActivity(

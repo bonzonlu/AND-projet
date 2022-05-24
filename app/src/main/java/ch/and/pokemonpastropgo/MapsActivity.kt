@@ -426,7 +426,6 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
             grantingPermission,
             customResult
         )
-
     }
 
     private fun validateGadgetAreaInitiateGeofence(resolve: Boolean = true) {
