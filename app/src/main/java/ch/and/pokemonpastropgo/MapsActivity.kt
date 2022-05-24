@@ -69,7 +69,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
 
     private val geofenceIntent: PendingIntent by lazy {
         val intent = Intent(this, GeofenceBroadcastReceiver::class.java)
-        PendingIntent.getBroadcast(this, 0, intent, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
+        PendingIntent.getBroadcast(this, 0, intent, PendingIntent.FLAG_MUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
     }
 
     var mapFrag: SupportMapFragment? = null
@@ -124,7 +124,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
                 .setRequestId("entry.key")
                 .setCircularRegion(YVERDON_LAT, YVERDON_LON, YVERDON_RAD)
                 .setExpirationDuration(Geofence.NEVER_EXPIRE)
-                .setTransitionTypes(Geofence.GEOFENCE_TRANSITION_ENTER)
+                .setTransitionTypes(Geofence.GEOFENCE_TRANSITION_ENTER or Geofence.GEOFENCE_TRANSITION_EXIT)
                 .build()
         )
 
@@ -342,7 +342,9 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
     //specify the geofence to monitor and the initial trigger
     private fun seekGeofencing(): GeofencingRequest {
         return GeofencingRequest.Builder().apply {
-            setInitialTrigger(GeofencingRequest.INITIAL_TRIGGER_ENTER)
+            // FIXME: Fonctionne si on ne suit pas la doc Android. Faire attention au cas où on serait déjà dans la geofence
+            //setInitialTrigger(GeofencingRequest.INITIAL_TRIGGER_ENTER)
+            setInitialTrigger(Geofence.GEOFENCE_TRANSITION_ENTER)
             addGeofences(geofenceList)
         }.build()
     }
@@ -434,8 +436,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         val builder = LocationSettingsRequest.Builder().addLocationRequest(locationRequest)
 
         val client = LocationServices.getSettingsClient(this)
-        val locationResponses =
-            client.checkLocationSettings(builder.build())
+        val locationResponses = client.checkLocationSettings(builder.build())
 
         locationResponses.addOnFailureListener { exception ->
             if (exception is ResolvableApiException && resolve) {
@@ -457,7 +458,6 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
             }
         }
     }
-
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
