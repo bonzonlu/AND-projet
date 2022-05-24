@@ -22,28 +22,38 @@ class GeofenceBroadcastReceiver : BroadcastReceiver() {
         }
 
         val geofenceTransition = geofencingEvent.geofenceTransition
-        if (geofenceTransition == Geofence.GEOFENCE_TRANSITION_ENTER) {
-            val triggeringGeofences = geofencingEvent.triggeringGeofences
+        when (geofenceTransition) {
+            Geofence.GEOFENCE_TRANSITION_ENTER -> {
+                Log.d(TAG, "ENTER TRANSITION")
+                val triggeringGeofences = geofencingEvent.triggeringGeofences
 
-            /*
-            // Obtaining transition details as a String.
-            val geofenceTransitionDetails = getGeofenceTransitionDetails(
-                context!!,
-                geofenceTransition,
-                triggeringGeofences
-            )*/
+                /*
+                // Obtaining transition details as a String.
+                val geofenceTransitionDetails = getGeofenceTransitionDetails(
+                    context!!,
+                    geofenceTransition,
+                    triggeringGeofences
+                )*/
 
-            // Creating and sending Notification
-            val notificationManager = ContextCompat.getSystemService(
-                context!!,
-                NotificationManager::class.java
-            ) as NotificationManager
+                // Creating and sending Notification
+                val notificationManager = ContextCompat.getSystemService(
+                    context!!,
+                    NotificationManager::class.java
+                ) as NotificationManager
 
-            Log.d(TAG, "ENTER TRANSITION")
 
-            notificationManager.sendGeofenceEnteredNotification(context)
-        } else {
-            Log.e(TAG, "Invalid type transition $geofenceTransition")
+
+                notificationManager.sendGeofenceEnteredNotification(context)
+            }
+            Geofence.GEOFENCE_TRANSITION_EXIT -> {
+                Log.d(TAG, "EXIT TRANSITION")
+            }
+            Geofence.GEOFENCE_TRANSITION_DWELL -> {
+                Log.d(TAG, "DWELL TRANSITION")
+            }
+            else -> {
+                Log.e(TAG, "Invalid type transition $geofenceTransition")
+            }
         }
     }
 

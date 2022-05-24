@@ -51,6 +51,9 @@ private val REQUEST_TURN_DEVICE_LOCATION_ON = 20
 private val REQUEST_FOREGROUND_AND_BACKGROUND_PERMISSION_RESULT_CODE = 3
 private val REQUEST_FOREGROUND_ONLY_PERMISSIONS_REQUEST_CODE = 4
 private val REQUEST_LOCATION_PERMISSION = 10
+private val YVERDON_LAT = 46.77
+private val YVERDON_LON = 6.63
+private val YVERDON_RAD = 200f
 
 class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
     private lateinit var mMap: GoogleMap
@@ -116,14 +119,10 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         // Geofencing
         geoClient = LocationServices.getGeofencingClient(this)
 
-        val latitude = 6.63
-        val longitude = 46.51
-        val radius = 200f
-
         geofenceList.add(
             Geofence.Builder()
                 .setRequestId("entry.key")
-                .setCircularRegion(latitude, longitude, radius)
+                .setCircularRegion(YVERDON_LAT, YVERDON_LON, YVERDON_RAD)
                 .setExpirationDuration(Geofence.NEVER_EXPIRE)
                 .setTransitionTypes(Geofence.GEOFENCE_TRANSITION_ENTER)
                 .build()
@@ -174,16 +173,16 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
 
         // https://developers.google.com/maps/documentation/android-sdk/views?hl=fr#setting_boundaries
         // Sets boundaries
-        val sw = LatLng(46.51, 6.63)    // SW boundaries - Lausanne
-        val ne = LatLng(46.77, 6.64)    // NE boundaries - Yverdon
+        val sw = LatLng(46.30, 6.37)    // SW boundaries - Lausanne
+        val ne = LatLng(YVERDON_LAT, YVERDON_LON)    // NE boundaries - Yverdon
         val LausanneYverdonBounds = LatLngBounds(sw, ne)
 
         // Moves the camera to show the entire area of interest
         mMap.moveCamera(CameraUpdateFactory.newLatLngBounds(LausanneYverdonBounds, 200))
 
         var circleOptions = CircleOptions()
-            .center(LatLng(46.77, 6.63))
-            .radius(200.0)
+            .center(LatLng(YVERDON_LAT, YVERDON_LON))
+            .radius(YVERDON_RAD.toDouble())
             .fillColor(0x40ff0000).strokeColor(Color.TRANSPARENT)
             .strokeWidth(2F)
 
