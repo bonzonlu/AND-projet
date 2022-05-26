@@ -9,7 +9,7 @@ data class PokemonsFromHuntZone(
     @Relation(
         parentColumn = "zoneId",
         entityColumn = "huntId",
-        associateBy = Junction(HuntZoneCrossReff::class)
+        associateBy = Junction(PokemonToHunt::class)
     )
     val notPokemons: List<PokemonToHunt>,
 )

@@ -1,12 +1,15 @@
 package ch.and.pokemonpastropgo.viewmodels
 
 import androidx.lifecycle.LiveData
+import androidx.lifecycle.MediatorLiveData
+import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModel
 import ch.and.pokemonpastropgo.db.models.PokemonToHunt
 import ch.and.pokemonpastropgo.db.repositories.BaseRepository
 import ch.and.pokemonpastropgo.db.repositories.PokemonToHuntRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.distinctUntilChanged
+import java.lang.UnsupportedOperationException
 
 class PokemonToHuntViewModel(rep: BaseRepository): ViewModel() {
 
@@ -23,7 +26,15 @@ class PokemonToHuntViewModel(rep: BaseRepository): ViewModel() {
     }
 
     fun pokemonsToHuntByZone(id: Long): Flow<List<PokemonToHunt>>{
-        return repository.pokemonsToHuntByZone(id).distinctUntilChanged()
+        return repository.pokemonsToHuntByZone(id)
+    }
+
+    fun foundPokemon(qrStr: String){
+        repository.foundPokemon(qrStr)
+    }
+
+    fun displayPokemonHint(huntId: String){
+        repository.displayPokemonHint(huntId)
     }
 
 

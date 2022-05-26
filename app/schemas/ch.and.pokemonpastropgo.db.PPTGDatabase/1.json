@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "9c506d75e33823b264fb65e4dcee02cf",
+    "identityHash": "878de75a600baa027b3759e1e3475c11",
     "entities": [
       {
         "tableName": "HuntZone",
@@ -81,6 +81,7 @@
         "foreignKeys": []
       },
       {
+<<<<<<< HEAD
         "tableName": "HuntZoneCrossReff",
         "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`zoneId` INTEGER NOT NULL, `huntId` INTEGER NOT NULL, PRIMARY KEY(`zoneId`, `huntId`))",
         "fields": [
@@ -110,12 +111,21 @@
       {
         "tableName": "PokemonToHunt",
         "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`huntId` INTEGER PRIMARY KEY AUTOINCREMENT, `pokemonId` TEXT NOT NULL, `zoneId` INTEGER NOT NULL, `hint` TEXT NOT NULL, `found` INTEGER NOT NULL)",
+=======
+        "tableName": "PokemonToHunt",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`huntId` TEXT NOT NULL, `pokemonId` TEXT NOT NULL, `zoneId` INTEGER NOT NULL, `hint` TEXT NOT NULL, `displayHint` INTEGER NOT NULL, `found` INTEGER NOT NULL, `lat` REAL NOT NULL, `lng` REAL NOT NULL, PRIMARY KEY(`huntId`))",
+>>>>>>> fb-hunt
         "fields": [
           {
             "fieldPath": "huntId",
             "columnName": "huntId",
+<<<<<<< HEAD
             "affinity": "INTEGER",
             "notNull": false
+=======
+            "affinity": "TEXT",
+            "notNull": true
+>>>>>>> fb-hunt
           },
           {
             "fieldPath": "pokemonId",
@@ -136,17 +146,45 @@
             "notNull": true
           },
           {
+<<<<<<< HEAD
+=======
+            "fieldPath": "displayHint",
+            "columnName": "displayHint",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+>>>>>>> fb-hunt
             "fieldPath": "found",
             "columnName": "found",
             "affinity": "INTEGER",
             "notNull": true
+<<<<<<< HEAD
+=======
+          },
+          {
+            "fieldPath": "lat",
+            "columnName": "lat",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "lng",
+            "columnName": "lng",
+            "affinity": "REAL",
+            "notNull": true
+>>>>>>> fb-hunt
           }
         ],
         "primaryKey": {
           "columnNames": [
             "huntId"
           ],
+<<<<<<< HEAD
           "autoGenerate": true
+=======
+          "autoGenerate": false
+>>>>>>> fb-hunt
         },
         "indices": [],
         "foreignKeys": []
@@ -155,7 +193,11 @@
     "views": [],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
+<<<<<<< HEAD
       "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '9c506d75e33823b264fb65e4dcee02cf')"
+=======
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '878de75a600baa027b3759e1e3475c11')"
+>>>>>>> fb-hunt
     ]
   }
 }

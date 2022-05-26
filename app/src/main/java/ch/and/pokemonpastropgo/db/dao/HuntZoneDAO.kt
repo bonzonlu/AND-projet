@@ -12,9 +12,6 @@ interface HuntZoneDAO {
     fun insertAll(vararg huntZone: HuntZone)
 
     @Insert
-    fun insertAll(vararg huntZoneCrossReff: HuntZoneCrossReff)
-
-    @Insert
     fun insert(huntZone: HuntZone)
 
     @Update

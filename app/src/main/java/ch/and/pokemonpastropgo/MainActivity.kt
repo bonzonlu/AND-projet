@@ -1,8 +1,8 @@
 package ch.and.pokemonpastropgo
 
 import android.content.Intent
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import androidx.appcompat.app.AppCompatActivity
 import android.util.Log
 import androidx.activity.viewModels
 import androidx.lifecycle.lifecycleScope
@@ -20,11 +20,11 @@ import kotlinx.coroutines.launch
 class MainActivity : AppCompatActivity() {
     lateinit var mainBinding: ActivityMainBinding
 
-    private val vm: HuntZonesViewmodel by viewModels{
+    private val vm: HuntZonesViewmodel by viewModels {
         ViewModelFactory((application as PPTGDatabaseApp).huntZoneRepository)
     }
 
-    private val toHuntVm: PokemonToHuntViewModel by viewModels{
+    private val toHuntVm: PokemonToHuntViewModel by viewModels {
         ViewModelFactory((application as PPTGDatabaseApp).pokemonToHuntRepository)
     }
 
@@ -40,19 +40,19 @@ class MainActivity : AppCompatActivity() {
             startActivity(i)
         }
 
-        val recyclle = findViewById<RecyclerView>(R.id.zone_recycler_view)
-        val adapter = ZoneListRecyclerAdapter(toHuntVm,this)
+        val recyclerView = findViewById<RecyclerView>(R.id.zone_recycler_view)
+        val adapter = ZoneListRecyclerAdapter(toHuntVm, this)
 
-        recyclle.adapter = adapter
-        recyclle.layoutManager  = LinearLayoutManager(this)
+        recyclerView.adapter = adapter
+        recyclerView.layoutManager = LinearLayoutManager(this)
 
         lifecycleScope.launch {
             vm.allZones.collect {
                 adapter.items = it
             }
         }
-        vm.zoneCount.observe(this){
-            Log.d("Zone count",it.toString())
+        vm.zoneCount.observe(this) {
+            Log.d("Zone count", it.toString())
         }
     }
 }
