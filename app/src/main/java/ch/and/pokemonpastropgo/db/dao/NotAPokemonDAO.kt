@@ -1,12 +1,8 @@
 package ch.and.pokemonpastropgo.db.dao
 
-import androidx.lifecycle.LiveData
 import androidx.room.*
-import ch.and.pokemonpastropgo.db.models.HuntZoneCrossReff
 import ch.and.pokemonpastropgo.db.models.NotAPokemon
-import ch.and.pokemonpastropgo.db.models.PokemonsFromHuntZone
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.StateFlow
 
 @Dao
 interface NotAPokemonDAO {

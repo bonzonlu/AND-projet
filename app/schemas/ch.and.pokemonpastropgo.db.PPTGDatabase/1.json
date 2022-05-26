@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "4be9c156769da9d14c3d3a213329b562",
+    "identityHash": "878de75a600baa027b3759e1e3475c11",
     "entities": [
       {
         "tableName": "HuntZone",
@@ -81,41 +81,14 @@
         "foreignKeys": []
       },
       {
-        "tableName": "HuntZoneCrossReff",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`zoneId` INTEGER NOT NULL, `huntId` INTEGER NOT NULL, PRIMARY KEY(`zoneId`, `huntId`))",
-        "fields": [
-          {
-            "fieldPath": "zoneId",
-            "columnName": "zoneId",
-            "affinity": "INTEGER",
-            "notNull": true
-          },
-          {
-            "fieldPath": "huntId",
-            "columnName": "huntId",
-            "affinity": "INTEGER",
-            "notNull": true
-          }
-        ],
-        "primaryKey": {
-          "columnNames": [
-            "zoneId",
-            "huntId"
-          ],
-          "autoGenerate": false
-        },
-        "indices": [],
-        "foreignKeys": []
-      },
-      {
         "tableName": "PokemonToHunt",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`huntId` INTEGER PRIMARY KEY AUTOINCREMENT, `pokemonId` TEXT NOT NULL, `zoneId` INTEGER NOT NULL, `hint` TEXT NOT NULL, `found` INTEGER NOT NULL, `lat` REAL NOT NULL, `lng` REAL NOT NULL)",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`huntId` TEXT NOT NULL, `pokemonId` TEXT NOT NULL, `zoneId` INTEGER NOT NULL, `hint` TEXT NOT NULL, `displayHint` INTEGER NOT NULL, `found` INTEGER NOT NULL, `lat` REAL NOT NULL, `lng` REAL NOT NULL, PRIMARY KEY(`huntId`))",
         "fields": [
           {
             "fieldPath": "huntId",
             "columnName": "huntId",
-            "affinity": "INTEGER",
-            "notNull": false
+            "affinity": "TEXT",
+            "notNull": true
           },
           {
             "fieldPath": "pokemonId",
@@ -133,6 +106,12 @@
             "fieldPath": "hint",
             "columnName": "hint",
             "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "displayHint",
+            "columnName": "displayHint",
+            "affinity": "INTEGER",
             "notNull": true
           },
           {
@@ -158,7 +137,7 @@
           "columnNames": [
             "huntId"
           ],
-          "autoGenerate": true
+          "autoGenerate": false
         },
         "indices": [],
         "foreignKeys": []
@@ -167,7 +146,7 @@
     "views": [],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '4be9c156769da9d14c3d3a213329b562')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '878de75a600baa027b3759e1e3475c11')"
     ]
   }
 }

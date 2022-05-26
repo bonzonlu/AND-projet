@@ -5,11 +5,13 @@ import androidx.room.PrimaryKey
 
 @Entity
 data class PokemonToHunt(
-    @PrimaryKey(autoGenerate = true) val huntId: Long?,
+    @PrimaryKey
+    val huntId: String,
     val pokemonId: String,
     val zoneId: Long,
     val hint: String,
-    val found: Boolean,
+    val displayHint: Boolean,
+    var found: Boolean,
     val lat: Double,
     val lng: Double
 )

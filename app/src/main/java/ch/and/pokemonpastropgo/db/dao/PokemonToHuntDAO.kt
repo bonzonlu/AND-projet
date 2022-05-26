@@ -4,17 +4,28 @@ import androidx.lifecycle.LiveData
 import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.Query
+import androidx.room.Update
 import ch.and.pokemonpastropgo.db.models.PokemonToHunt
+import ch.and.pokemonpastropgo.db.models.UpdatePokemonFound
+import ch.and.pokemonpastropgo.db.models.UpdatePokemonHint
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.StateFlow
 
 @Dao
 interface PokemonToHuntDAO {
     @Insert
     fun insertAll(vararg pokemonToHunt: PokemonToHunt)
 
+    @Update(entity = PokemonToHunt::class)
+    fun foundPokemon(pokemonToHunt: UpdatePokemonFound)
+
+    @Update(entity = PokemonToHunt::class)
+    fun displayHint(pokemonToHunt: UpdatePokemonHint)
+
     @Query("Select * FROM PokemonToHunt")
     fun getAllPokemonsToHunt(): Flow<List<PokemonToHunt>>
+
+    @Query("SELECT * FROM PokemonToHunt WHERE PokemonToHunt.zoneId = :zoneId AND PokemonToHunt.pokemonId = :id")
+    fun getPokemonToHunt(id: String,zoneId: Long): LiveData<PokemonToHunt>
 
     @Query("SELECT * FROM PokemonToHunt WHERE PokemonToHunt.zoneId = :id")
     fun getAllPokemonsToHuntByZone(id: Long): Flow<List<PokemonToHunt>>
