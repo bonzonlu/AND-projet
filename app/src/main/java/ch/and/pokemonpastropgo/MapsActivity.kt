@@ -153,9 +153,12 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         mapsBinding.locationHintFab.setOnClickListener { Toast.makeText(this@MapsActivity, "Location hint", Toast.LENGTH_SHORT).show() }
         mapsBinding.historyBookFab.setOnClickListener { Toast.makeText(this@MapsActivity, "History book", Toast.LENGTH_SHORT).show() }
 
+
+
         lifecycleScope.launch {
             toHuntVm.pokemonsToHuntByZone(intent.getLongExtra("zoneId", -1)).collect {
                 Log.d(TAG, it.size.toString())
+
                 /*
                 val lat = huntZonesVm.getZone(it[0].zoneId).value?.huntZone?.lat!!
                 val lng = huntZonesVm.getZone(it[0].zoneId).value?.huntZone?.lng!!
@@ -211,14 +214,25 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
             mMap.moveCamera(CameraUpdateFactory.newLatLngBounds(LausanneYverdonBounds, 200))
         }
 
-        // Creates and display a Geofence in Yverdon
-        val circleOptions = CircleOptions()
-            .center(LatLng(YVERDON_LAT, YVERDON_LON))
-            .radius(YVERDON_RAD.toDouble())
-            .fillColor(0x40ff0000).strokeColor(Color.TRANSPARENT)
-            .strokeWidth(2F)
+        huntZonesVm.getZone(intent.getLongExtra("zoneId",-1)).observe(this){
+            geofenceList.add(
+                Geofence.Builder()
+                    .setRequestId("entry.key")
+                    .setCircularRegion(it.huntZone.lat, it.huntZone.lng,it.huntZone.radius.toFloat())
+                    .setExpirationDuration(Geofence.NEVER_EXPIRE)
+                    .setTransitionTypes(Geofence.GEOFENCE_TRANSITION_ENTER or Geofence.GEOFENCE_TRANSITION_EXIT)
+                    .build()
+            )
 
-        mMap.addCircle(circleOptions)
+            // Creates and display a Geofence in Yverdon
+            val circleOptions = CircleOptions()
+                .center(LatLng(it.huntZone.lat, it.huntZone.lng))
+                .radius(it.huntZone.radius)
+                .fillColor(0x40ff0000).strokeColor(Color.TRANSPARENT)
+                .strokeWidth(2F)
+
+            mMap.addCircle(circleOptions)
+        }
 
         // Location and permissions check
         mLocationRequest = LocationRequest().apply {
