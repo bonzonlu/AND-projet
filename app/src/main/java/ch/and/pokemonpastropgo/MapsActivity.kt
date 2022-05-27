@@ -9,13 +9,18 @@ import android.content.IntentSender
 import android.content.pm.PackageManager.PERMISSION_GRANTED
 import android.graphics.Color
 import android.content.pm.PackageManager
+import android.graphics.drawable.ColorDrawable
 import android.location.Location
 import android.os.Bundle
 import android.util.Log
 import android.os.Looper
+import android.view.Gravity
 import android.view.MenuItem
+import android.view.View
 import android.view.animation.Animation
 import android.view.animation.AnimationUtils
+import android.widget.LinearLayout
+import android.widget.PopupWindow
 import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.app.AlertDialog
@@ -23,6 +28,9 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
+import ch.and.pokemonpastropgo.RecyclerViews.HintListRecyclerAdapter
 import ch.and.pokemonpastropgo.databinding.ActivityMapsBinding
 import ch.and.pokemonpastropgo.db.PPTGDatabaseApp
 import ch.and.pokemonpastropgo.viewmodels.HuntZonesViewmodel
@@ -75,6 +83,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         ViewModelFactory((application as PPTGDatabaseApp).huntZoneRepository)
     }
 
+    private var zoneId: Long = -1
     private val gadgetQ = android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q
 
     private val geofenceIntent: PendingIntent by lazy {
@@ -150,7 +159,9 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         }
 
         mapsBinding.menuFab.setOnClickListener { animateFab() }
-        mapsBinding.locationHintFab.setOnClickListener { Toast.makeText(this@MapsActivity, "Location hint", Toast.LENGTH_SHORT).show() }
+        mapsBinding.locationHintFab.setOnClickListener {
+            openPopupWindow()
+        }
         mapsBinding.historyBookFab.setOnClickListener { Toast.makeText(this@MapsActivity, "History book", Toast.LENGTH_SHORT).show() }
 
 
@@ -213,8 +224,8 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         mMap.setOnMapLoadedCallback {
             mMap.moveCamera(CameraUpdateFactory.newLatLngBounds(LausanneYverdonBounds, 200))
         }
-
-        huntZonesVm.getZone(intent.getLongExtra("zoneId",-1)).observe(this){
+        zoneId = intent.getLongExtra("zoneId", -1)
+        huntZonesVm.getZone(zoneId).observe(this){
             geofenceList.add(
                 Geofence.Builder()
                     .setRequestId("entry.key")
@@ -538,5 +549,27 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
             mapsBinding.historyBookFab.startAnimation(fromBottomAnimation)
         }
         fabOpen = !fabOpen
+    }
+
+    private fun openPopupWindow() {
+        val popupWindow = PopupWindow(this)
+        val popupView = layoutInflater.inflate(R.layout.popup_window, null)
+
+        val recyclerView = popupView.findViewById<RecyclerView>(R.id.popup_recycler_view)
+        val adapter = HintListRecyclerAdapter(toHuntVm,zoneId,this)
+        recyclerView.adapter = adapter
+        recyclerView.layoutManager = LinearLayoutManager(this)
+
+        lifecycleScope.launch {
+            toHuntVm.pokemonsToHuntByZone(zoneId).collect {
+                println(it.size)
+                adapter.items = it
+            }
+        }
+        popupWindow.contentView = popupView
+        popupWindow.width = LinearLayout.LayoutParams.WRAP_CONTENT
+        popupWindow.height = LinearLayout.LayoutParams.WRAP_CONTENT
+        popupWindow.isFocusable = true
+        popupWindow.showAtLocation(mapsBinding.root, Gravity.CENTER, 0, 0)
     }
 }
