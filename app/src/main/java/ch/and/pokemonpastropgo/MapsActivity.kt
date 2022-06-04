@@ -570,6 +570,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         popupWindow.width = LinearLayout.LayoutParams.WRAP_CONTENT
         popupWindow.height = LinearLayout.LayoutParams.WRAP_CONTENT
         popupWindow.isFocusable = true
+        popupWindow.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
         popupWindow.showAtLocation(mapsBinding.root, Gravity.CENTER, 0, 0)
     }
 }
