@@ -14,23 +14,9 @@ class HuntZonesViewmodel(rep: BaseRepository): ViewModel() {
     val allZones = repository.allZones
     val zoneCount = repository.allZonesCount
 
-    fun createZone(title: String, description: String, lat: Double, lng: Double, radius: Double){
-        val zone = HuntZone(
-            null,
-            title,
-            description,
-            lat,
-            lng,
-            radius
-        )
-        repository.insertZone(zone)
-    }
 
     fun getZone(id:Long): LiveData<PokemonsFromHuntZone> {
         return repository.getZone(id)
-    }
-    fun deleteAllZones(){
-        repository.deleteAll()
     }
 }
 

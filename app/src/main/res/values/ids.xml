@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <item name="popup_window" type="id"/>
+    <item name="zone_item" type="id"/>
+    <item name="hint_item" type="id"/>
+</resources>

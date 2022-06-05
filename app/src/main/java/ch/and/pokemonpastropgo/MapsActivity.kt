@@ -1,69 +1,65 @@
 package ch.and.pokemonpastropgo
 
 import android.Manifest
-import android.annotation.TargetApi
-import android.app.PendingIntent
+import android.R.attr
 import android.annotation.SuppressLint
+import android.annotation.TargetApi
+import android.app.Activity
+import android.app.PendingIntent
+import android.content.Context
 import android.content.Intent
 import android.content.IntentSender
 import android.content.pm.PackageManager.PERMISSION_GRANTED
+import android.content.res.Resources.NotFoundException
 import android.graphics.Color
-import android.content.pm.PackageManager
 import android.graphics.drawable.ColorDrawable
 import android.location.Location
+import android.os.Build
 import android.os.Bundle
-import android.util.Log
 import android.os.Looper
+import android.util.Log
 import android.view.Gravity
 import android.view.MenuItem
-import android.view.View
 import android.view.animation.Animation
 import android.view.animation.AnimationUtils
 import android.widget.LinearLayout
 import android.widget.PopupWindow
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContract
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
+import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
-import androidx.lifecycle.lifecycleScope
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import ch.and.pokemonpastropgo.RecyclerViews.HintListRecyclerAdapter
 import ch.and.pokemonpastropgo.databinding.ActivityMapsBinding
 import ch.and.pokemonpastropgo.db.PPTGDatabaseApp
+import ch.and.pokemonpastropgo.geofencing.GeofenceBroadcastReceiver
+import ch.and.pokemonpastropgo.geofencing.createChannel
 import ch.and.pokemonpastropgo.viewmodels.HuntZonesViewmodel
 import ch.and.pokemonpastropgo.viewmodels.PokemonToHuntViewModel
 import ch.and.pokemonpastropgo.viewmodels.ViewModelFactory
-import ch.and.pokemonpastropgo.geofencing.GeofenceBroadcastReceiver
-import ch.and.pokemonpastropgo.geofencing.createChannel
 import com.google.android.gms.common.api.ResolvableApiException
+import com.google.android.gms.common.util.MapUtils
 import com.google.android.gms.location.*
-import com.google.android.gms.location.FusedLocationProviderClient
-import com.google.android.gms.location.LocationCallback
-import com.google.android.gms.location.LocationRequest.PRIORITY_BALANCED_POWER_ACCURACY
 import com.google.android.gms.location.LocationRequest.create
-import com.google.android.gms.location.LocationResult
-import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
-import com.google.android.gms.maps.model.CircleOptions
-import com.google.android.gms.maps.model.LatLng
-import com.google.android.gms.maps.model.LatLngBounds
+import com.google.android.gms.maps.model.*
+import com.google.maps.android.SphericalUtil
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
-import com.google.android.gms.maps.model.*
-import com.google.android.gms.location.LocationRequest
 
 // https://github.com/brandy-kay/GeofencingDemo/tree/master/app/src/main/java/com/adhanjadevelopers/geofencingdemo
 
 private const val TAG = "MapsActivity"
-private val YVERDON_LAT = 46.77
-private val YVERDON_LON = 6.63
-private val YVERDON_RAD = 200f
 
 class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
     private lateinit var mMap: GoogleMap
@@ -76,6 +72,36 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
     private val fromBottomAnimation: Animation by lazy { AnimationUtils.loadAnimation(this, R.anim.from_bottom_animation) }
     private val toBottomAnimation: Animation by lazy { AnimationUtils.loadAnimation(this, R.anim.to_bottom_animation) }
 
+    class GetScannedQRContract: ActivityResultContract<Long,String>(){
+        override fun createIntent(context: Context, input: Long): Intent =
+            Intent(context,QRCodeActivity::class.java).apply {
+                putExtra("zoneId",input)
+            }
+
+        override fun parseResult(resultCode: Int, intent: Intent?): String {
+            if (resultCode != Activity.RESULT_OK)
+                return ""
+            return intent?.getStringExtra(QRCodeActivity.SCAN_QR_RESULT_KEY)!!
+        }
+    }
+
+    @RequiresApi(Build.VERSION_CODES.Q)
+    private val registerForLocationAccess = registerForActivityResult(ActivityResultContracts.RequestPermission()){
+        if (it){
+            startLocationUpdates()
+            registerForBackGroundAccess.launch(Manifest.permission.ACCESS_BACKGROUND_LOCATION)
+        }
+    }
+
+    @RequiresApi(Build.VERSION_CODES.Q)
+    private val registerForBackGroundAccess = registerForActivityResult(ActivityResultContracts.RequestPermission()){
+        Log.d("PERM","access to background $it")
+    }
+
+    private val getScannedQR = registerForActivityResult(GetScannedQRContract()){
+        Log.d("SCAN QR","Got QR code $it" )
+    }
+
     private val toHuntVm: PokemonToHuntViewModel by viewModels {
         ViewModelFactory((application as PPTGDatabaseApp).pokemonToHuntRepository)
     }
@@ -84,7 +110,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
     }
 
     private var zoneId: Long = -1
-    private val gadgetQ = android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q
+    private val gadgetQ = Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q
 
     private val geofenceIntent: PendingIntent by lazy {
         val intent = Intent(this, GeofenceBroadcastReceiver::class.java)
@@ -94,7 +120,6 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
     var mapFrag: SupportMapFragment? = null
     lateinit var mLocationRequest: LocationRequest
     var mLastLocation: Location? = null
-    internal var mCurrLocationMarker: Marker? = null
     internal var mFusedLocationClient: FusedLocationProviderClient? = null
 
     internal var mLocationCallback: LocationCallback = object : LocationCallback() {
@@ -105,17 +130,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
                 val location = locationList.last()
                 Log.i("MapsActivity", "Location: " + location.latitude + " " + location.longitude)
                 mLastLocation = location
-                if (mCurrLocationMarker != null) {
-                    mCurrLocationMarker?.remove()
-                }
 
-                //Place current location marker
-                val latLng = LatLng(location.latitude, location.longitude)
-                val markerOptions = MarkerOptions()
-                markerOptions.position(latLng)
-                markerOptions.title("Current Position")
-                markerOptions.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_MAGENTA))
-                mCurrLocationMarker = mMap.addMarker(markerOptions)
 
                 //move map camera
                 //mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, 11.0F))
@@ -125,7 +140,6 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
         // Handles return arrow button in MapsActivity ActionBar
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
 
@@ -138,15 +152,6 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         // Geofencing
         geoClient = LocationServices.getGeofencingClient(this)
 
-        geofenceList.add(
-            Geofence.Builder()
-                .setRequestId("entry.key")
-                .setCircularRegion(YVERDON_LAT, YVERDON_LON, YVERDON_RAD)
-                .setExpirationDuration(Geofence.NEVER_EXPIRE)
-                .setTransitionTypes(Geofence.GEOFENCE_TRANSITION_ENTER or Geofence.GEOFENCE_TRANSITION_EXIT)
-                .build()
-        )
-
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
         val mapFragment = supportFragmentManager
             .findFragmentById(R.id.map) as SupportMapFragment
@@ -154,8 +159,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
 
         // Starts the QR code scanner activity when FAB pressed
         mapsBinding.qrCodeScanFab.setOnClickListener {
-            val i = Intent(this, QRCodeActivity::class.java)
-            startActivity(i)
+            getScannedQR.launch(intent.getLongExtra("zoneId", -1))
         }
 
         mapsBinding.menuFab.setOnClickListener { animateFab() }
@@ -165,28 +169,6 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         mapsBinding.historyBookFab.setOnClickListener { Toast.makeText(this@MapsActivity, "History book", Toast.LENGTH_SHORT).show() }
 
 
-
-        lifecycleScope.launch {
-            toHuntVm.pokemonsToHuntByZone(intent.getLongExtra("zoneId", -1)).collect {
-                Log.d(TAG, it.size.toString())
-
-                /*
-                val lat = huntZonesVm.getZone(it[0].zoneId).value?.huntZone?.lat!!
-                val lng = huntZonesVm.getZone(it[0].zoneId).value?.huntZone?.lng!!
-                val rad = huntZonesVm.getZone(it[0].zoneId).value?.huntZone?.radius!!
-
-                geofenceList.add(
-                    Geofence.Builder()
-                        .setRequestId("entry.key")
-                        .setCircularRegion(lat, lng, rad.toFloat())
-                        .setExpirationDuration(Geofence.NEVER_EXPIRE)
-                        .setTransitionTypes(Geofence.GEOFENCE_TRANSITION_ENTER or Geofence.GEOFENCE_TRANSITION_EXIT)
-                        .build()
-                )*/
-            }
-        }
-
-        supportActionBar?.title = "Map Location Activity"
 
         mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
 
@@ -212,18 +194,22 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
     @SuppressLint("MissingPermission")
     override fun onMapReady(googleMap: GoogleMap) {
         mMap = googleMap
-        //mMap.mapType = GoogleMap.MAP_TYPE_HYBRID
 
-        // https://developers.google.com/maps/documentation/android-sdk/views?hl=fr#setting_boundaries
-        // Sets boundaries
-        val sw = LatLng(46.30, 6.37)    // SW boundaries - Lausanne
-        val ne = LatLng(YVERDON_LAT, YVERDON_LON)    // NE boundaries - Yverdon
-        val LausanneYverdonBounds = LatLngBounds(sw, ne)
-
-        // Moves the camera to show the entire area of interest
-        mMap.setOnMapLoadedCallback {
-            mMap.moveCamera(CameraUpdateFactory.newLatLngBounds(LausanneYverdonBounds, 200))
+        try {
+            // Customise the styling of the base map using a JSON object defined
+            // in a raw resource file.
+            val success = googleMap.setMapStyle(
+                MapStyleOptions.loadRawResourceStyle(
+                    this,ch.and.pokemonpastropgo.R.raw.map_style_light
+                )
+            )
+            if (!success) {
+                Log.e(TAG, "Style parsing failed.")
+            }
+        } catch (e: NotFoundException) {
+            Log.e(TAG, "Can't find style. Error: ", e)
         }
+
         zoneId = intent.getLongExtra("zoneId", -1)
         huntZonesVm.getZone(zoneId).observe(this){
             geofenceList.add(
@@ -243,30 +229,61 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
                 .strokeWidth(2F)
 
             mMap.addCircle(circleOptions)
+
+            val LausanneYverdonBounds = toBounds(LatLng(it.huntZone.lat,it.huntZone.lng),it.huntZone.radius)
+
+            // Moves the camera to show the entire area of interest
+            mMap.setOnMapLoadedCallback {
+                val camupdate = CameraUpdateFactory.newLatLngBounds(LausanneYverdonBounds, 200)
+                mMap.animateCamera(camupdate)
+            }
+            supportActionBar?.title = it.huntZone.title
+
+
         }
 
-        // Location and permissions check
-        mLocationRequest = LocationRequest().apply {
-            interval = 100
-            fastestInterval = 50
-            priority = LocationRequest.PRIORITY_HIGH_ACCURACY
-            maxWaitTime = 100
-        }
-
-        if (ContextCompat.checkSelfPermission(
-                this,
-                Manifest.permission.ACCESS_FINE_LOCATION
-            ) == PERMISSION_GRANTED
-        ) {
-            //Location Permission already granted
-            mFusedLocationClient?.requestLocationUpdates(mLocationRequest, mLocationCallback, Looper.myLooper()!!)
-            mMap.isMyLocationEnabled = true
-        } else {
-            //Request Location Permission
-            checkLocationPermission()
-        }
+        startLocationUpdates()
     }
 
+    private fun toBounds(center: LatLng, radius: Double): LatLngBounds {
+        val targetNorthEast: LatLng =
+            SphericalUtil.computeOffset(center, radius * Math.sqrt(2.0), 45.0)
+
+        val targetSouthWest: LatLng =
+            SphericalUtil.computeOffset(center, radius * Math.sqrt(2.0), 225.0)
+
+        return LatLngBounds(targetSouthWest, targetNorthEast)
+    }
+
+    private fun startLocationUpdates(){
+
+        if(!mMap.isMyLocationEnabled){
+            // Location and permissions check
+            mLocationRequest = create().apply {
+                interval = 100
+                fastestInterval = 50
+                priority = LocationRequest.PRIORITY_HIGH_ACCURACY
+                maxWaitTime = 100
+            }
+
+            if ((ContextCompat.checkSelfPermission(
+                    this,
+                    Manifest.permission.ACCESS_FINE_LOCATION
+                ) == PERMISSION_GRANTED ) ||
+                (ContextCompat.checkSelfPermission(
+                    this,
+                    Manifest.permission.ACCESS_COARSE_LOCATION
+                ) == PERMISSION_GRANTED )
+            ) {
+                //Location Permission already granted
+                mFusedLocationClient?.requestLocationUpdates(mLocationRequest, mLocationCallback, Looper.myLooper()!!)
+                mMap.isMyLocationEnabled = true
+            } else {
+                //Request Location Permission
+                checkLocationPermission()
+            }
+        }
+    }
     private fun checkLocationPermission() {
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PERMISSION_GRANTED) {
             // Should we show an explanation?
@@ -297,70 +314,9 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
             }
         }
     }
-
-    override fun onRequestPermissionsResult(
-        requestCode: Int,
-        permissions: Array<String>,
-        grantResults: IntArray
-    ) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        when (requestCode) {
-            // Geolocation
-            MY_PERMISSIONS_REQUEST_LOCATION -> {
-                // If request is cancelled, the result arrays are empty
-                if (grantResults.isNotEmpty() && grantResults[0] == PERMISSION_GRANTED) {
-                    // Permission was granted, yay! Do the location-related task you need to do
-                    if (ContextCompat.checkSelfPermission(
-                            this,
-                            Manifest.permission.ACCESS_FINE_LOCATION
-                        ) == PERMISSION_GRANTED
-                    ) {
-                        // TODO : ERROR
-                        /*
-                        mFusedLocationClient?.requestLocationUpdates(
-                            mLocationRequest,
-                            mLocationCallback,
-                            Looper.myLooper()
-                        )
-                        mMap.setMyLocationEnabled(true)
-                        */
-                    }
-                } else {
-                    // Permission denied, boo! Disable the functionality that depends on that permission
-                    Toast.makeText(this, "permission denied", Toast.LENGTH_LONG).show()
-                }
-                return
-            }
-            // Geofencing
-            REQUEST_LOCATION_PERMISSION -> {
-                if (grantResults.isNotEmpty() && (grantResults[0] == PERMISSION_GRANTED))
-                    startLocation()
-            }
-        }
-        // other 'case' lines to check for other
-        // permissions this app might request
-    }
-
-    /*
-    override fun onRequestPermissionsResult(
-        requestCode: Int,
-        permissions: Array<out String>,
-        grantResults: IntArray
-    ) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        if (requestCode == REQUEST_LOCATION_PERMISSION) {
-            if (grantResults.size > 0 && (grantResults[0] == PackageManager.PERMISSION_GRANTED))
-                startLocation()
-        }
-    }
-    */
-
     companion object {
         const val MY_PERMISSIONS_REQUEST_LOCATION = 99
         const val REQUEST_TURN_DEVICE_LOCATION_ON = 20
-        const val REQUEST_FOREGROUND_AND_BACKGROUND_PERMISSION_RESULT_CODE = 3
-        const val REQUEST_FOREGROUND_ONLY_PERMISSIONS_REQUEST_CODE = 4
-        const val REQUEST_LOCATION_PERMISSION = 10
     }
 
     private fun isPermissionGranted(): Boolean {
@@ -369,34 +325,20 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         ) === PERMISSION_GRANTED
     }
 
-    @SuppressLint("MissingPermission")
-    private fun startLocation() {
-        if (isPermissionGranted()) {
-            if (ActivityCompat.checkSelfPermission(
-                    this,
-                    Manifest.permission.ACCESS_FINE_LOCATION
-                ) != PERMISSION_GRANTED
-            ) {
-                return
-            }
-            mMap.isMyLocationEnabled = true
-        } else {
-            ActivityCompat.requestPermissions(
-                this, arrayOf<String>(Manifest.permission.ACCESS_FINE_LOCATION),
-                REQUEST_LOCATION_PERMISSION
-            )
-        }
-    }
+
 
     //specify the geofence to monitor and the initial trigger
-    private fun seekGeofencing(): GeofencingRequest {
-        return GeofencingRequest.Builder().apply {
-            // FIXME: Fonctionne si on ne suit pas la doc Android. Faire attention au cas où on serait déjà dans la geofence
-            // https://developer.android.com/training/location/geofencing#specify-geofences-and-initial-triggers
-            //setInitialTrigger(GeofencingRequest.INITIAL_TRIGGER_ENTER)
-            setInitialTrigger(Geofence.GEOFENCE_TRANSITION_ENTER)
-            addGeofences(geofenceList)
-        }.build()
+    private fun seekGeofencing(): GeofencingRequest? {
+        if(geofenceList.size > 0)
+            return GeofencingRequest.Builder().apply {
+                // FIXME: Fonctionne si on ne suit pas la doc Android. Faire attention au cas où on serait déjà dans la geofence
+                // https://developer.android.com/training/location/geofencing#specify-geofences-and-initial-triggers
+                //setInitialTrigger(GeofencingRequest.INITIAL_TRIGGER_ENTER)
+                setInitialTrigger(Geofence.GEOFENCE_TRANSITION_ENTER)
+                addGeofences(geofenceList)
+            }.build()
+        else
+            return null
     }
 
     //adding a geofence
@@ -409,15 +351,19 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         ) {
             return
         }
-        geoClient.addGeofences(seekGeofencing(), geofenceIntent).run {
-            addOnSuccessListener {
-                Toast.makeText(this@MapsActivity, "Geofences added", Toast.LENGTH_SHORT).show()
-            }
-            addOnFailureListener {
-                Toast.makeText(this@MapsActivity, "Failed to add geofences", Toast.LENGTH_SHORT).show()
+        val req = seekGeofencing()
+        if(req != null){
+            geoClient.addGeofences(req, geofenceIntent).run {
+                addOnSuccessListener {
+                    Toast.makeText(this@MapsActivity, "Geofences added", Toast.LENGTH_SHORT).show()
+                }
+                addOnFailureListener {
+                    Toast.makeText(this@MapsActivity, "Failed to add geofences", Toast.LENGTH_SHORT).show()
 
+                }
             }
         }
+
     }
 
     //removing a geofence
@@ -433,6 +379,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         }
     }
 
+    @RequiresApi(Build.VERSION_CODES.Q)
     private fun examinePermisionAndinitiatGeofence() {
         if (authorizedLocation()) {
             validateGadgetAreaInitiateGeofence()
@@ -460,24 +407,9 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
     }
 
     //requesting background and foreground permissions
-    @TargetApi(29)
+    @RequiresApi(Build.VERSION_CODES.Q)
     private fun askLocationPermission() {
-        if (authorizedLocation())
-            return
-        var grantingPermission = arrayOf(Manifest.permission.ACCESS_FINE_LOCATION)
-        val customResult = when {
-            gadgetQ -> {
-                grantingPermission += Manifest.permission.ACCESS_BACKGROUND_LOCATION
-                REQUEST_FOREGROUND_AND_BACKGROUND_PERMISSION_RESULT_CODE
-            }
-            else -> REQUEST_FOREGROUND_ONLY_PERMISSIONS_REQUEST_CODE
-        }
-        Log.d(TAG, "askLocationPermission: ")
-        ActivityCompat.requestPermissions(
-            this,
-            grantingPermission,
-            customResult
-        )
+        registerForLocationAccess.launch(Manifest.permission.ACCESS_FINE_LOCATION)
     }
 
     private fun validateGadgetAreaInitiateGeofence(resolve: Boolean = true) {
@@ -510,12 +442,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         }
     }
 
-    // TODO : Deprecated : Remplacer par un contrat (AndroidX)
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-        validateGadgetAreaInitiateGeofence(false)
-    }
-
+    @RequiresApi(Build.VERSION_CODES.Q)
     override fun onStart() {
         super.onStart()
         examinePermisionAndinitiatGeofence()

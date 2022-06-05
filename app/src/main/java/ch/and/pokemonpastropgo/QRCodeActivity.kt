@@ -1,22 +1,30 @@
 package ch.and.pokemonpastropgo
 
 import android.annotation.SuppressLint
+import android.content.Intent
 import android.content.pm.PackageManager
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.util.Log
 import android.view.SurfaceHolder
 import android.view.animation.Animation
 import android.view.animation.AnimationUtils
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.activity.viewModels
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import ch.and.pokemonpastropgo.databinding.ActivityQrcodeBinding
+import ch.and.pokemonpastropgo.db.PPTGDatabaseApp
+import ch.and.pokemonpastropgo.viewmodels.PokemonToHuntViewModel
+import ch.and.pokemonpastropgo.viewmodels.ViewModelFactory
 import java.io.IOException
 import com.google.android.gms.vision.CameraSource
 import com.google.android.gms.vision.Detector
 import com.google.android.gms.vision.barcode.Barcode
 import com.google.android.gms.vision.barcode.BarcodeDetector
 import com.google.android.gms.vision.Detector.Detections
+import java.lang.Exception
 
 // Source from : https://harshitabambure.medium.com/barcode-scanner-and-qr-code-scanner-android-kotlin-b911b1299f65
 class QRCodeActivity : AppCompatActivity() {
@@ -26,17 +34,32 @@ class QRCodeActivity : AppCompatActivity() {
     private var scannedValue = ""
     private lateinit var qrCodeActivityBinding: ActivityQrcodeBinding
 
+    private val toHuntVm: PokemonToHuntViewModel by viewModels {
+        ViewModelFactory((application as PPTGDatabaseApp).pokemonToHuntRepository)
+    }
+
+    private val registerForCameraPermission = registerForActivityResult(ActivityResultContracts.RequestPermission()){
+        if(it){
+            setupControls()
+            Toast.makeText(this, "Camera permission  granted", Toast.LENGTH_SHORT).show()
+
+        }else{
+            Toast.makeText(this, "Camera permission not granted", Toast.LENGTH_SHORT).show()
+            finish()
+        }
+    }
+
+    private  var zoneId = -1L
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         qrCodeActivityBinding = ActivityQrcodeBinding.inflate(layoutInflater)
         val view = qrCodeActivityBinding.root
         setContentView(view)
-
         if (ContextCompat.checkSelfPermission(
                 this@QRCodeActivity, android.Manifest.permission.CAMERA
             ) != PackageManager.PERMISSION_GRANTED
         ) {
-            askForCameraPermission()
+            registerForCameraPermission.launch(android.Manifest.permission.CAMERA)
         } else {
             setupControls()
         }
@@ -44,6 +67,9 @@ class QRCodeActivity : AppCompatActivity() {
         val aniSlide: Animation =
             AnimationUtils.loadAnimation(this@QRCodeActivity, R.anim.scanner_animation)
         qrCodeActivityBinding.barcodeLine.startAnimation(aniSlide)
+
+        zoneId = intent.getLongExtra("zoneId",-1)
+
     }
 
     private fun setupControls() {
@@ -60,6 +86,7 @@ class QRCodeActivity : AppCompatActivity() {
             override fun surfaceCreated(holder: SurfaceHolder) {
                 try {
                     //Start preview after 1s delay
+                        Log.d("QRCodeActivity", "surfaceCreated")
                     cameraSource.start(holder)
                 } catch (e: IOException) {
                     e.printStackTrace()
@@ -73,6 +100,7 @@ class QRCodeActivity : AppCompatActivity() {
                 width: Int,
                 height: Int
             ) {
+                Log.d("QRCodeActivity", "surfaceChanged")
                 try {
                     cameraSource.start(holder)
                 } catch (e: IOException) {
@@ -81,6 +109,7 @@ class QRCodeActivity : AppCompatActivity() {
             }
 
             override fun surfaceDestroyed(holder: SurfaceHolder) {
+                Log.d("QRCodeActivity", "surfaceDestroyed")
                 cameraSource.stop()
             }
         })
@@ -100,41 +129,36 @@ class QRCodeActivity : AppCompatActivity() {
                     //Don't forget to add this line printing value or finishing activity must run on main thread
                     runOnUiThread {
                         cameraSource.stop()
+
                         Toast.makeText(this@QRCodeActivity, "value- $scannedValue", Toast.LENGTH_SHORT).show()
+                        if(zoneId == scannedValue.substringAfter("_").toLong()){
+                            val res = Intent()
+                            res.putExtra(SCAN_QR_RESULT_KEY,scannedValue)
+                            setResult(RESULT_OK,res)
+                            toHuntVm.foundPokemon(scannedValue)
+                        }else{
+                            Log.d("ERROR","You are not in the required zone")
+                        }
                         finish()
                     }
                 } else {
-                    Toast.makeText(this@QRCodeActivity, "value- else", Toast.LENGTH_SHORT).show()
+                    runOnUiThread {
+                        Toast.makeText(this@QRCodeActivity, "No barcode detected", Toast.LENGTH_SHORT)
+                            .show()
+                    }
                 }
             }
         })
     }
 
-    private fun askForCameraPermission() {
-        ActivityCompat.requestPermissions(
-            this@QRCodeActivity,
-            arrayOf(android.Manifest.permission.CAMERA),
-            requestCodeCameraPermission
-        )
-    }
 
-    override fun onRequestPermissionsResult(
-        requestCode: Int,
-        permissions: Array<out String>,
-        grantResults: IntArray
-    ) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        if (requestCode == requestCodeCameraPermission && grantResults.isNotEmpty()) {
-            if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                setupControls()
-            } else {
-                Toast.makeText(applicationContext, "Permission Denied", Toast.LENGTH_SHORT).show()
-            }
-        }
-    }
 
     override fun onDestroy() {
         super.onDestroy()
         cameraSource.stop()
+    }
+
+    companion object{
+        val SCAN_QR_RESULT_KEY="QR_KEY"
     }
 }

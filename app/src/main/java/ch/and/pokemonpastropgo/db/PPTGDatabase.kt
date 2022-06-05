@@ -51,10 +51,10 @@ abstract  class PPTGDatabase:  RoomDatabase() {
                     thread {
                         //TODO populate database
                         database.huntZoneDAO().insertAll(
-                            HuntZone(1,"HEIG - Cheseaux","Une zone bondée de pokémouille dans chaque recoins du bâtiment",46.779380,6.659500,40.0),
-                            HuntZone(2,"Y-Plage","vous voulez des pokémouilles aquatique, ici c'est l'endroit idéal pour en trouver",46.785060,6.651450,20.0),
-                            HuntZone(3,"HEIG - St-Roch","Deuxième domaine le plus populaire pour trouver des pokémouilles unique",46.781230,6.647310,40.0),
-                            HuntZone(4,"Chez manu","Un pokémouille spécial rôde dans les parages, faites attention trouvez le avant qu'il vous trouves",46.540680,6.581140,10.0),
+                            HuntZone(1,"HEIG - Cheseaux","Une zone bondée de pokémouille dans chaque recoins du bâtiment",46.779380,6.659500,5000.0),
+                            HuntZone(2,"Y-Plage","vous voulez des pokémouilles aquatique, ici c'est l'endroit idéal pour en trouver",46.785060,6.651450,5000.0),
+                            HuntZone(3,"HEIG - St-Roch","Deuxième domaine le plus populaire pour trouver des pokémouilles unique",46.781230,6.647310,5000.0),
+                            HuntZone(4,"Chez manu","Un pokémouille spécial rôde dans les parages, faites attention trouvez le avant qu'il vous trouves",46.540680,6.581140,5000.0),
                             )
                         database.notAPokemonDAO().insertAll(
                             NotAPokemon("pukachi",""),
@@ -66,7 +66,7 @@ abstract  class PPTGDatabase:  RoomDatabase() {
                             NotAPokemon("herbivore",""),
                             NotAPokemon("salam",""),
                             NotAPokemon("roukoul",""),
-                            NotAPokemon("Macho",""),
+                            NotAPokemon("macho",""),
                         )
                         database.pokemonToHuntDAO().insertAll(
                             PokemonToHunt("pukachi_1","pukachi",1,"somewhere",false,false,0.0,0.0),
@@ -80,10 +80,10 @@ abstract  class PPTGDatabase:  RoomDatabase() {
                             PokemonToHunt("ratatouille_2","ratatouille",2,"somewhere",false,false,0.0,0.0),
                             PokemonToHunt("boulenormal_2","boulenormal",2,"somewhere",false,false,0.0,0.0),
                             PokemonToHunt("herbivore_2","herbivore",2,"somewhere",false,false,0.0,0.0),
-                            PokemonToHunt("Macho_2","Macho",2,"somewhere",false,false,0.0,0.0),
+                            PokemonToHunt("Macho_2","macho",2,"somewhere",false,false,0.0,0.0),
 
                             PokemonToHunt("nidoroi_3","nidoroi",3,"somewhere",false,false,0.0,0.0),
-                            PokemonToHunt("Macho_3","Macho",3,"somewhere",false,false,0.0,0.0),
+                            PokemonToHunt("Macho_3","macho",3,"somewhere",false,false,0.0,0.0),
                             PokemonToHunt("salam_3","salam",3,"somewhere",false,false,0.0,0.0),
                             PokemonToHunt("dreakeau_3","dreakeau",3,"somewhere",false,false,0.0,0.0),
                             PokemonToHunt("herbivore_3","herbivore",3,"somewhere",false,false,0.0,0.0),
@@ -91,7 +91,7 @@ abstract  class PPTGDatabase:  RoomDatabase() {
                             PokemonToHunt("boulenormal_3","boulenormal",3,"somewhere",false,false,0.0,0.0),
 
                             PokemonToHunt("boulenormal_4","boulenormal",4,"somewhere",false,false,0.0,0.0),
-                            PokemonToHunt("Macho_4","Macho",4,"somewhere",false,false,0.0,0.0),
+                            PokemonToHunt("Macho_4","macho",4,"somewhere",false,false,0.0,0.0),
                             PokemonToHunt("dreakeau_4","dreakeau",4,"somewhere",false,false,0.0,0.0),
                             PokemonToHunt("salam_4","salam",4,"somewhere",false,false,0.0,0.0),
                             PokemonToHunt("nidoroi_4","nidoroi",4,"somewhere",false,false,0.0,0.0),

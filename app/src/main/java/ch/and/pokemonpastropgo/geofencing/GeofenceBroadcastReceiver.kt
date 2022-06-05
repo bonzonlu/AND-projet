@@ -21,8 +21,7 @@ class GeofenceBroadcastReceiver : BroadcastReceiver() {
             return
         }
 
-        val geofenceTransition = geofencingEvent.geofenceTransition
-        when (geofenceTransition) {
+        when (val geofenceTransition = geofencingEvent.geofenceTransition) {
             Geofence.GEOFENCE_TRANSITION_ENTER -> {
                 Log.d(TAG, "ENTER TRANSITION")
                 val triggeringGeofences = geofencingEvent.triggeringGeofences
@@ -56,5 +55,4 @@ class GeofenceBroadcastReceiver : BroadcastReceiver() {
             }
         }
     }
-
 }

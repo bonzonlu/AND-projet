@@ -1,20 +1,19 @@
 package ch.and.pokemonpastropgo.RecyclerViews
 
-import android.util.Log
+import android.graphics.BitmapFactory
+import android.graphics.BlurMaskFilter
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageView
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
-import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import ch.and.pokemonpastropgo.R
 import ch.and.pokemonpastropgo.db.models.PokemonToHunt
-import ch.and.pokemonpastropgo.db.models.PokemonsFromHuntZone
 import ch.and.pokemonpastropgo.viewmodels.PokemonToHuntViewModel
-import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.launch
+import jp.wasabeef.blurry.Blurry
 
 class HintListRecyclerAdapter(
     private val model: PokemonToHuntViewModel,
@@ -47,17 +46,33 @@ class HintListRecyclerAdapter(
         )
     }
 
-    override fun onBindViewHolder(holder: ViewHolder, position: Int) { holder.bind(items[position])
+    override fun onBindViewHolder(holder: ViewHolder, position: Int) {
+        holder.bind(items[position])
     }
 
-    inner class ViewHolder(view: View): RecyclerView.ViewHolder(view) {
+    inner class ViewHolder(private val view: View): RecyclerView.ViewHolder(view) {
         private val pokemonName = view.findViewById<TextView>(R.id.pokemon_name)
         private val hintText = view.findViewById<TextView>(R.id.hint_text)
-
+        private val pokemonIcon = view.findViewById<ImageView>(R.id.pokemon_icon)
 
         fun bind(item: PokemonToHunt) {
             pokemonName.text = item.pokemonId
             hintText.text = item.hint
+            val pokemonResourceId = context.resources.getIdentifier( item.pokemonId,"drawable", context.packageName)
+
+            if(!item.found){
+                val bmpImg = BitmapFactory.decodeResource(context.resources, pokemonResourceId)
+                val txtBlurFilter = BlurMaskFilter(10f, BlurMaskFilter.Blur.NORMAL)
+                hintText.paint.maskFilter = txtBlurFilter
+                Blurry.with(context).radius(25).sampling(8).from(bmpImg).into(pokemonIcon)
+            }else{
+                pokemonIcon.setImageResource(pokemonResourceId)
+            }
+
+            view.setOnClickListener {
+                pokemonIcon.setImageResource(pokemonResourceId)
+                hintText.paint.maskFilter = null
+            }
         }
     }
 }

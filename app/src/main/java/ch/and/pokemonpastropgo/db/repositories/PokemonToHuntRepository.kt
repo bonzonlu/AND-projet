@@ -26,7 +26,7 @@ class PokemonToHuntRepository(
     }
 
     fun pokemonsToHuntByZone(id: Long): Flow<List<PokemonToHunt>> {
-        return pokemonToHuntDAO.getAllPokemonsToHuntByZone(id)
+        return pokemonToHuntDAO.getAllPokemonsToHuntByZone(id).distinctUntilChanged()
     }
 
     fun pokemonsToHuntCntByZone(id: Long): LiveData<Long> {
