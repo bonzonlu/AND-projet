@@ -20,7 +20,7 @@ class HintListRecyclerAdapter(
     private val zone: Long,
     private val context: AppCompatActivity,
     _items: List<PokemonToHunt> = listOf()
-): RecyclerView.Adapter<HintListRecyclerAdapter.ViewHolder>() {
+) : RecyclerView.Adapter<HintListRecyclerAdapter.ViewHolder>() {
 
     var items = listOf<PokemonToHunt>()
         set(value) {
@@ -50,7 +50,7 @@ class HintListRecyclerAdapter(
         holder.bind(items[position])
     }
 
-    inner class ViewHolder(private val view: View): RecyclerView.ViewHolder(view) {
+    inner class ViewHolder(private val view: View) : RecyclerView.ViewHolder(view) {
         private val pokemonName = view.findViewById<TextView>(R.id.pokemon_name)
         private val hintText = view.findViewById<TextView>(R.id.hint_text)
         private val pokemonIcon = view.findViewById<ImageView>(R.id.pokemon_icon)
@@ -58,19 +58,19 @@ class HintListRecyclerAdapter(
         fun bind(item: PokemonToHunt) {
             pokemonName.text = item.pokemonId
             hintText.text = item.hint
-            val pokemonResourceId = context.resources.getIdentifier( item.pokemonId,"drawable", context.packageName)
+            val pokemonResourceId = context.resources.getIdentifier(item.pokemonId, "drawable", context.packageName)
 
-            if(!item.found){
+            if (!item.found) {
                 val bmpImg = BitmapFactory.decodeResource(context.resources, pokemonResourceId)
                 val txtBlurFilter = BlurMaskFilter(10f, BlurMaskFilter.Blur.NORMAL)
                 hintText.paint.maskFilter = txtBlurFilter
                 Blurry.with(context).radius(25).sampling(8).from(bmpImg).into(pokemonIcon)
-            }else{
+            } else {
                 pokemonIcon.setImageResource(pokemonResourceId)
             }
 
             view.setOnClickListener {
-                pokemonIcon.setImageResource(pokemonResourceId)
+                hintText.setLayerType(View.LAYER_TYPE_SOFTWARE,null);
                 hintText.paint.maskFilter = null
             }
         }
