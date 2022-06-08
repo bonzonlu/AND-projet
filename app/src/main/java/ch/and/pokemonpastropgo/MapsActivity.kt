@@ -84,18 +84,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         }
     }
 
-    @RequiresApi(Build.VERSION_CODES.Q)
-    private val registerForLocationAccess = registerForActivityResult(ActivityResultContracts.RequestPermission()) {
-        if (it) {
-            startLocationUpdates()
-            registerForBackGroundAccess.launch(Manifest.permission.ACCESS_BACKGROUND_LOCATION)
-        }
-    }
 
-    @RequiresApi(Build.VERSION_CODES.Q)
-    private val registerForBackGroundAccess = registerForActivityResult(ActivityResultContracts.RequestPermission()) {
-        Log.d("PERM", "access to background $it")
-    }
 
     private val getScannedQR = registerForActivityResult(GetScannedQRContract()) {
         Log.d("SCAN QR", "Got QR code $it")
@@ -362,8 +351,6 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
     private fun examinePermissionAndInitiateGeofence() {
         if (authorizedLocation()) {
             validateGadgetAreaInitiateGeofence()
-        } else {
-            askLocationPermission()
         }
     }
 
@@ -385,11 +372,6 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         return formalizeForeground && formalizeBackground
     }
 
-    //requesting background and foreground permissions
-    @RequiresApi(Build.VERSION_CODES.Q)
-    private fun askLocationPermission() {
-        registerForLocationAccess.launch(Manifest.permission.ACCESS_FINE_LOCATION)
-    }
 
     private fun validateGadgetAreaInitiateGeofence(resolve: Boolean = true) {
         val locationRequest = create().apply {

@@ -38,16 +38,6 @@ class QRCodeActivity : AppCompatActivity() {
         ViewModelFactory((application as PPTGDatabaseApp).pokemonToHuntRepository)
     }
 
-    private val registerForCameraPermission = registerForActivityResult(ActivityResultContracts.RequestPermission()){
-        if(it){
-            setupControls()
-            Toast.makeText(this, "Camera permission  granted", Toast.LENGTH_SHORT).show()
-
-        }else{
-            Toast.makeText(this, "Camera permission not granted", Toast.LENGTH_SHORT).show()
-            finish()
-        }
-    }
 
     private  var zoneId = -1L
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -57,10 +47,8 @@ class QRCodeActivity : AppCompatActivity() {
         setContentView(view)
         if (ContextCompat.checkSelfPermission(
                 this@QRCodeActivity, android.Manifest.permission.CAMERA
-            ) != PackageManager.PERMISSION_GRANTED
+            ) == PackageManager.PERMISSION_GRANTED
         ) {
-            registerForCameraPermission.launch(android.Manifest.permission.CAMERA)
-        } else {
             setupControls()
         }
 
@@ -116,8 +104,7 @@ class QRCodeActivity : AppCompatActivity() {
 
         barcodeDetector.setProcessor(object : Detector.Processor<Barcode> {
             override fun release() {
-                Toast.makeText(applicationContext, "Scanner has been closed", Toast.LENGTH_SHORT)
-                    .show()
+
             }
 
             override fun receiveDetections(detections: Detections<Barcode>) {
@@ -140,11 +127,6 @@ class QRCodeActivity : AppCompatActivity() {
                             Log.d("ERROR","You are not in the required zone")
                         }
                         finish()
-                    }
-                } else {
-                    runOnUiThread {
-                        Toast.makeText(this@QRCodeActivity, "No barcode detected", Toast.LENGTH_SHORT)
-                            .show()
                     }
                 }
             }
