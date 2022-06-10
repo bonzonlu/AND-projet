@@ -25,7 +25,6 @@ import android.widget.LinearLayout
 import android.widget.PopupWindow
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContract
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AlertDialog
@@ -66,12 +65,14 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, SharedPreferences.
     private lateinit var mapsBinding: ActivityMapsBinding
     private lateinit var geoClient: GeofencingClient
     private val geofenceList = ArrayList<Geofence>()
+    private var zoneId: Long = -1
 
     private val rotateOpenAnimation: Animation by lazy { AnimationUtils.loadAnimation(this, R.anim.rotate_open_animation) }
     private val rotateCloseAnimation: Animation by lazy { AnimationUtils.loadAnimation(this, R.anim.rotate_close_animation) }
     private val fromBottomAnimation: Animation by lazy { AnimationUtils.loadAnimation(this, R.anim.from_bottom_animation) }
     private val toBottomAnimation: Animation by lazy { AnimationUtils.loadAnimation(this, R.anim.to_bottom_animation) }
 
+    // Obtains code scanned from QR Activity to complete Pokémon in DB (Inner class - contract)
     class GetScannedQRContract : ActivityResultContract<Long, String>() {
         override fun createIntent(context: Context, input: Long): Intent =
             Intent(context, QRCodeActivity::class.java).apply {
@@ -85,12 +86,11 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, SharedPreferences.
         }
     }
 
-
-
     private val getScannedQR = registerForActivityResult(GetScannedQRContract()) {
         Log.d("SCAN QR", "Got QR code $it")
     }
 
+    // ViewModels
     private val toHuntVm: PokemonToHuntViewModel by viewModels {
         ViewModelFactory((application as PPTGDatabaseApp).pokemonToHuntRepository)
     }
@@ -98,20 +98,17 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, SharedPreferences.
         ViewModelFactory((application as PPTGDatabaseApp).huntZoneRepository)
     }
 
-    private var zoneId: Long = -1
-    private val gadgetQ = Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q
-
     private val geofenceIntent: PendingIntent by lazy {
         val intent = Intent(this, GeofenceBroadcastReceiver::class.java)
         PendingIntent.getBroadcast(this, 0, intent, PendingIntent.FLAG_MUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
     }
 
-    var mapFrag: SupportMapFragment? = null
-    lateinit var mLocationRequest: LocationRequest
     var mLastLocation: Location? = null
-    internal var mFusedLocationClient: FusedLocationProviderClient? = null
+    private var mapFrag: SupportMapFragment? = null
+    private var mFusedLocationClient: FusedLocationProviderClient? = null
+    private lateinit var mLocationRequest: LocationRequest
 
-    internal var mLocationCallback: LocationCallback = object : LocationCallback() {
+    private var mLocationCallback: LocationCallback = object : LocationCallback() {
         override fun onLocationResult(locationResult: LocationResult) {
             val locationList = locationResult.locations
             if (locationList.isNotEmpty()) {
@@ -119,9 +116,6 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, SharedPreferences.
                 val location = locationList.last()
                 Log.i("MapsActivity", "Location: " + location.latitude + " " + location.longitude)
                 mLastLocation = location
-
-                //move map camera
-                //mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, 11.0F))
             }
         }
     }
@@ -159,11 +153,25 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, SharedPreferences.
         mapFrag?.getMapAsync(this)
     }
 
-    public override fun onPause() {
+    @RequiresApi(Build.VERSION_CODES.Q)
+    override fun onStart() {
+        super.onStart()
+        geofencePref = getSharedPreferences("TriggeredExitedId", Context.MODE_PRIVATE)
+        geofencePref!!.registerOnSharedPreferenceChangeListener(this)
+        examinePermissionAndInitiateGeofence()
+    }
+
+    override fun onPause() {
         super.onPause()
 
         // Stop location updates when Activity is no longer active
         mFusedLocationClient?.removeLocationUpdates(mLocationCallback)
+    }
+
+    // When Maps Activity is destroyed
+    override fun onDestroy() {
+        super.onDestroy()
+        removeGeofence()
     }
 
     /**
@@ -179,8 +187,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, SharedPreferences.
         mMap = googleMap
 
         try {
-            // Customise the styling of the base map using a JSON object defined
-            // in a raw resource file.
+            // Customise the styling of the base map using a JSON object defined in a raw resource file.
             val success = googleMap.setMapStyle(MapStyleOptions.loadRawResourceStyle(this, R.raw.map_style_light))
             if (!success) {
                 Log.e(TAG, "Style parsing failed.")
@@ -189,6 +196,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, SharedPreferences.
             Log.e(TAG, "Can't find style. Error: ", e)
         }
 
+        // Gets clicked zone from Main Activity and displays in on the map
         zoneId = intent.getLongExtra("zoneId", -1)
         huntZonesVm.getZone(zoneId).observe(this) {
             geofenceList.add(
@@ -224,6 +232,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, SharedPreferences.
         startLocationUpdates()
     }
 
+    // Returns a LatLngBounds matching the zone of interest
     private fun toBounds(center: LatLng, radius: Double): LatLngBounds {
         val targetNorthEast: LatLng =
             SphericalUtil.computeOffset(center, radius * sqrt(2.0), 45.0)
@@ -244,14 +253,8 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, SharedPreferences.
                 maxWaitTime = 100
             }
 
-            if ((ContextCompat.checkSelfPermission(
-                    this,
-                    Manifest.permission.ACCESS_FINE_LOCATION
-                ) == PERMISSION_GRANTED) ||
-                (ContextCompat.checkSelfPermission(
-                    this,
-                    Manifest.permission.ACCESS_COARSE_LOCATION
-                ) == PERMISSION_GRANTED)
+            if ((ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PERMISSION_GRANTED) ||
+                (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) == PERMISSION_GRANTED)
             ) {
                 //Location Permission already granted
                 mFusedLocationClient?.requestLocationUpdates(mLocationRequest, mLocationCallback, Looper.myLooper()!!)
@@ -294,11 +297,6 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, SharedPreferences.
         }
     }
 
-    companion object {
-        const val MY_PERMISSIONS_REQUEST_LOCATION = 99
-        const val REQUEST_TURN_DEVICE_LOCATION_ON = 20
-    }
-
     //specify the geofence to monitor and the initial trigger
     private fun seekGeofencing(): GeofencingRequest? {
         if (geofenceList.size > 0)
@@ -313,7 +311,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, SharedPreferences.
             return null
     }
 
-    //adding a geofence
+    // Adding a geofence
     @SuppressLint("MissingPermission")
     private fun addGeofence() {
         if (ActivityCompat.checkSelfPermission(
@@ -336,7 +334,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, SharedPreferences.
         }
     }
 
-    //removing a geofence
+    // Removing a geofence
     private fun removeGeofence() {
         geoClient.removeGeofences(geofenceIntent).run {
             addOnSuccessListener {
@@ -355,14 +353,13 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, SharedPreferences.
         }
     }
 
-    // check if background and foreground permissions are approved
+    // Check if background and foreground permissions are approved
     @RequiresApi(Build.VERSION_CODES.Q)
     private fun authorizedLocation(): Boolean {
         val formalizeForeground = PERMISSION_GRANTED == ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
         val formalizeBackground = PERMISSION_GRANTED == ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_BACKGROUND_LOCATION)
         return formalizeForeground && formalizeBackground
     }
-
 
     private fun validateGadgetAreaInitiateGeofence(resolve: Boolean = true) {
         val locationRequest = create().apply {
@@ -393,14 +390,8 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, SharedPreferences.
         }
     }
 
-    @RequiresApi(Build.VERSION_CODES.Q)
-    override fun onStart() {
-        super.onStart()
-        geofencePref = getSharedPreferences("TriggerdExitedId", Context.MODE_PRIVATE)
-        geofencePref!!.registerOnSharedPreferenceChangeListener(this)
-        examinePermissionAndInitiateGeofence()
-    }
-
+    // Handles QR-code scanner button enabling or disabling
+    // FIXME
     override fun onSharedPreferenceChanged(sharedPreferences: SharedPreferences?, key: String?) {
         val triggeredEnterFences: HashSet<String>
         val triggeredGeofences = ArrayList<String>()
@@ -420,18 +411,13 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, SharedPreferences.
             for (fence in triggeredEnterFences) {
                 Log.d("onSharedChanged: ", "ID: $fence triggered!")
                 //Here you can call removeGeoFencesFromClient() to unRegister geoFences and removeGeofencesFromMap() to remove marker.
-                // removeGeofencesFromClient(triggerdIdList);
-                // removeGeofencesFromMap(triggerdIdList);
-                if(fence == zoneId.toString()) {
+                // removeGeofencesFromClient(triggeredIdList);
+                // removeGeofencesFromMap(triggeredIdList);
+                if (fence == zoneId.toString()) {
                     mapsBinding.qrCodeScanFab.hide()
                 }
             }
         }
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-        removeGeofence()
     }
 
     // Handles return arrow button in MapsActivity ActionBar
@@ -444,7 +430,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, SharedPreferences.
         }
     }
 
-    // Floating Action Button
+    // Floating Action Button animations
     private var fabOpen = false
     private fun animateFab() {
         if (fabOpen) {
@@ -459,6 +445,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, SharedPreferences.
         fabOpen = !fabOpen
     }
 
+    // Open a popup window to display hints on Pokémon to hunt
     private fun openPopupWindow() {
         val popupWindow = PopupWindow(this)
         val popupView = layoutInflater.inflate(R.layout.popup_window, null)
@@ -480,5 +467,10 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, SharedPreferences.
         popupWindow.isFocusable = true
         popupWindow.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
         popupWindow.showAtLocation(mapsBinding.root, Gravity.CENTER, 0, 0)
+    }
+
+    companion object {
+        const val MY_PERMISSIONS_REQUEST_LOCATION = 99
+        const val REQUEST_TURN_DEVICE_LOCATION_ON = 20
     }
 }

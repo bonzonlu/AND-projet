@@ -19,7 +19,7 @@ class GeofenceBroadcastReceiver : BroadcastReceiver() {
     private var triggedGeofenceIdsList: ArrayList<String> = ArrayList()
 
     override fun onReceive(context: Context?, intent: Intent?) {
-        geofencePref = context?.getSharedPreferences("TriggerdExitedId", Context.MODE_PRIVATE)
+        geofencePref = context?.getSharedPreferences("TriggeredExitedId", Context.MODE_PRIVATE)
 
         val geofencingEvent = GeofencingEvent.fromIntent(intent!!)
         if (geofencingEvent.hasError()) {
@@ -32,8 +32,7 @@ class GeofenceBroadcastReceiver : BroadcastReceiver() {
             Geofence.GEOFENCE_TRANSITION_ENTER -> {
                 Log.d(TAG, "ENTER TRANSITION")
 
-                // Get the geofences that were triggered. A single event can trigger
-                // multiple geofences.
+                // Get the geofences that were triggered. A single event can trigger multiple geofences.
                 val triggeringGeofences = geofencingEvent.triggeringGeofences
                 storeGeofenceTransitionDetails(geofenceTransition, triggeringGeofences)
 
