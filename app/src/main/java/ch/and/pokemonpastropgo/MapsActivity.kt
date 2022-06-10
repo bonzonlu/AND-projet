@@ -2,12 +2,12 @@ package ch.and.pokemonpastropgo
 
 import android.Manifest
 import android.annotation.SuppressLint
-import android.annotation.TargetApi
 import android.app.Activity
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.content.IntentSender
+import android.content.SharedPreferences
 import android.content.pm.PackageManager.PERMISSION_GRANTED
 import android.content.res.Resources.NotFoundException
 import android.graphics.Color
@@ -60,7 +60,8 @@ import kotlin.math.sqrt
 
 private const val TAG = "MapsActivity"
 
-class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
+class MapsActivity : AppCompatActivity(), OnMapReadyCallback, SharedPreferences.OnSharedPreferenceChangeListener {
+    private var geofencePref: SharedPreferences? = null
     private lateinit var mMap: GoogleMap
     private lateinit var mapsBinding: ActivityMapsBinding
     private lateinit var geoClient: GeofencingClient
@@ -368,20 +369,10 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
     }
 
     // check if background and foreground permissions are approved
-    @TargetApi(29)
+    @RequiresApi(Build.VERSION_CODES.Q)
     private fun authorizedLocation(): Boolean {
-        val formalizeForeground = (
-                PERMISSION_GRANTED == ActivityCompat.checkSelfPermission(
-                    this, Manifest.permission.ACCESS_FINE_LOCATION
-                ))
-        val formalizeBackground =
-            if (gadgetQ) {
-                PERMISSION_GRANTED == ActivityCompat.checkSelfPermission(
-                    this, Manifest.permission.ACCESS_BACKGROUND_LOCATION
-                )
-            } else {
-                true
-            }
+        val formalizeForeground = PERMISSION_GRANTED == ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
+        val formalizeBackground = PERMISSION_GRANTED == ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_BACKGROUND_LOCATION)
         return formalizeForeground && formalizeBackground
     }
 
@@ -423,7 +414,37 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
     @RequiresApi(Build.VERSION_CODES.Q)
     override fun onStart() {
         super.onStart()
+        geofencePref = getSharedPreferences("TriggerdExitedId", Context.MODE_PRIVATE)
+        geofencePref!!.registerOnSharedPreferenceChangeListener(this)
         examinePermissionAndInitiateGeofence()
+    }
+
+    override fun onSharedPreferenceChanged(sharedPreferences: SharedPreferences?, key: String?) {
+        val triggeredEnterFences: HashSet<String>
+        val triggeredGeofences = ArrayList<String>()
+
+        if (key != null) {
+            Log.d("onSharedChanged: ", key)
+        }
+
+        if (key.equals("geoFenceId")) {
+            triggeredEnterFences = geofencePref?.getStringSet("geoFenceId", null) as HashSet<String>
+
+            if (triggeredEnterFences.isEmpty())
+                Log.d("onSharedChanged: ", "no exit fences triggered")
+
+            triggeredGeofences.addAll(triggeredEnterFences)
+
+            for (fence in triggeredEnterFences) {
+                Log.d("onSharedChanged: ", "ID: $fence triggered!")
+                //Here you can call removeGeoFencesFromClient() to unRegister geoFences and removeGeofencesFromMap() to remove marker.
+                // removeGeofencesFromClient(triggerdIdList);
+                // removeGeofencesFromMap(triggerdIdList);
+                if(fence == zoneId.toString()) {
+                    mapsBinding.qrCodeScanFab.hide()
+                }
+            }
+        }
     }
 
     override fun onDestroy() {

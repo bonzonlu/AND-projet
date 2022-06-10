@@ -18,7 +18,7 @@ fun createChannel(context: Context) {
     notificationManager.createNotificationChannel(notificationChannel)
 }
 
-fun NotificationManager.sendGeofenceEnteredNotification(context: Context) {
+fun NotificationManager.sendGeofenceNotification(context: Context, enter: Boolean) {
     //Opening the Notification
     val contentIntent = Intent(context, MapsActivity::class.java)
     val contentPendingIntent = PendingIntent.getActivity(
@@ -28,10 +28,16 @@ fun NotificationManager.sendGeofenceEnteredNotification(context: Context) {
         PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
     )
 
+    val notificationContent: String = if (enter) {
+        "You have entered a hunting area, start hunting !"
+    } else {
+        "Go back to the zone to keep hunting !"
+    }
+
     //Building the notification
     val builder = NotificationCompat.Builder(context, CHANNEL_ID)
         .setContentTitle(context.getString(R.string.app_name))
-        .setContentText("You have entered a geofenced area")
+        .setContentText(notificationContent)
         .setSmallIcon(R.drawable.ic_baseline_location_hint_24)
         .setPriority(NotificationCompat.PRIORITY_HIGH)
         .setContentIntent(contentPendingIntent)
