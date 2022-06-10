@@ -13,12 +13,14 @@ import android.content.res.Resources.NotFoundException
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import android.location.Location
+import android.opengl.Visibility
 import android.os.Build
 import android.os.Bundle
 import android.os.Looper
 import android.util.Log
 import android.view.Gravity
 import android.view.MenuItem
+import android.view.View
 import android.view.animation.Animation
 import android.view.animation.AnimationUtils
 import android.widget.LinearLayout
@@ -60,7 +62,7 @@ import kotlin.math.sqrt
 private const val TAG = "MapsActivity"
 
 class MapsActivity : AppCompatActivity(), OnMapReadyCallback, SharedPreferences.OnSharedPreferenceChangeListener {
-    private var geofencePref: SharedPreferences? = null
+    private var geoFencePref: SharedPreferences? = null
     private lateinit var mMap: GoogleMap
     private lateinit var mapsBinding: ActivityMapsBinding
     private lateinit var geoClient: GeofencingClient
@@ -114,7 +116,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, SharedPreferences.
             if (locationList.isNotEmpty()) {
                 //The last location in the list is the newest
                 val location = locationList.last()
-                Log.i("MapsActivity", "Location: " + location.latitude + " " + location.longitude)
+                //Log.i("MapsActivity", "Location: " + location.latitude + " " + location.longitude)
                 mLastLocation = location
             }
         }
@@ -156,9 +158,10 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, SharedPreferences.
     @RequiresApi(Build.VERSION_CODES.Q)
     override fun onStart() {
         super.onStart()
-        geofencePref = getSharedPreferences("TriggeredExitedId", Context.MODE_PRIVATE)
-        geofencePref!!.registerOnSharedPreferenceChangeListener(this)
         examinePermissionAndInitiateGeofence()
+        geoFencePref = getSharedPreferences("TriggeredExitedId", Context.MODE_PRIVATE)
+        geoFencePref!!.registerOnSharedPreferenceChangeListener(this)
+        mapsBinding.qrCodeScanFab.visibility = View.GONE
     }
 
     override fun onPause() {
@@ -201,7 +204,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, SharedPreferences.
         huntZonesVm.getZone(zoneId).observe(this) {
             geofenceList.add(
                 Geofence.Builder()
-                    .setRequestId("entry.key")
+                    .setRequestId(it.huntZone.zoneId.toString())
                     .setCircularRegion(it.huntZone.lat, it.huntZone.lng, it.huntZone.radius.toFloat())
                     .setExpirationDuration(Geofence.NEVER_EXPIRE)
                     .setTransitionTypes(Geofence.GEOFENCE_TRANSITION_ENTER or Geofence.GEOFENCE_TRANSITION_EXIT)
@@ -243,6 +246,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, SharedPreferences.
         return LatLngBounds(targetSouthWest, targetNorthEast)
     }
 
+    @SuppressLint("MissingPermission")
     private fun startLocationUpdates() {
         if (!mMap.isMyLocationEnabled) {
             // Location and permissions check
@@ -303,12 +307,15 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, SharedPreferences.
             return GeofencingRequest.Builder().apply {
                 // FIXME: Fonctionne si on ne suit pas la doc Android. Faire attention au cas où on serait déjà dans la geofence
                 // https://developer.android.com/training/location/geofencing#specify-geofences-and-initial-triggers
-                //setInitialTrigger(GeofencingRequest.INITIAL_TRIGGER_ENTER)
-                setInitialTrigger(Geofence.GEOFENCE_TRANSITION_ENTER)
+                setInitialTrigger(GeofencingRequest.INITIAL_TRIGGER_ENTER)
+                //setInitialTrigger(Geofence.GEOFENCE_TRANSITION_ENTER)
                 addGeofences(geofenceList)
+                mapsBinding.qrCodeScanFab.visibility = View.VISIBLE
             }.build()
-        else
+        else {
+            mapsBinding.qrCodeScanFab.visibility = View.GONE
             return null
+        }
     }
 
     // Adding a geofence
@@ -392,29 +399,45 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, SharedPreferences.
 
     // Handles QR-code scanner button enabling or disabling
     // FIXME
+    // https://stackoverflow.com/questions/67416235/how-to-notify-the-calling-activity-from-a-broadcastreceiver-when-using-geofencin
     override fun onSharedPreferenceChanged(sharedPreferences: SharedPreferences?, key: String?) {
+        val triggeredExitFences: HashSet<String>
         val triggeredEnterFences: HashSet<String>
         val triggeredGeofences = ArrayList<String>()
-
         if (key != null) {
             Log.d("onSharedChanged: ", key)
         }
 
-        if (key.equals("geoFenceId")) {
-            triggeredEnterFences = geofencePref?.getStringSet("geoFenceId", null) as HashSet<String>
+        if (key.equals("geoFenceExitId")) {
+            triggeredExitFences = geoFencePref?.getStringSet("geoFenceId", null) as HashSet<String>
+
+            if (triggeredExitFences.isEmpty())
+                Log.d("onSharedChanged: ", "no exit fences triggered")
+
+            triggeredGeofences.addAll(triggeredExitFences)
+
+            for (fence in triggeredExitFences) {
+                Log.d("onSharedChanged: ", "ID: $fence triggered!")
+
+                if (fence == zoneId.toString()) {
+                    Log.d("onSharedChangehide: ", "should hide")
+                    mapsBinding.qrCodeScanFab.visibility = View.GONE
+                }
+            }
+        } else if (key.equals("geoFenceEnterId")) {
+            triggeredEnterFences = geoFencePref?.getStringSet("geoFenceEnterId", null) as HashSet<String>
 
             if (triggeredEnterFences.isEmpty())
-                Log.d("onSharedChanged: ", "no exit fences triggered")
+                Log.d("onSharedChanged: ", "no enter fences triggered")
 
             triggeredGeofences.addAll(triggeredEnterFences)
 
             for (fence in triggeredEnterFences) {
                 Log.d("onSharedChanged: ", "ID: $fence triggered!")
-                //Here you can call removeGeoFencesFromClient() to unRegister geoFences and removeGeofencesFromMap() to remove marker.
-                // removeGeofencesFromClient(triggeredIdList);
-                // removeGeofencesFromMap(triggeredIdList);
+
                 if (fence == zoneId.toString()) {
-                    mapsBinding.qrCodeScanFab.hide()
+                    Log.d("onSharedChangeshow: ", "should show")
+                    mapsBinding.qrCodeScanFab.visibility = View.VISIBLE
                 }
             }
         }

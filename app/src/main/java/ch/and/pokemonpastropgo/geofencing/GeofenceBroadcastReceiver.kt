@@ -14,12 +14,13 @@ import com.google.android.gms.location.GeofencingEvent
 private const val TAG = "GeofenceBroadcastReceiver"
 
 class GeofenceBroadcastReceiver : BroadcastReceiver() {
-    private var geofencePref: SharedPreferences? = null
+    private var geoFencePref: SharedPreferences? = null
+    private val triggeredExitGeofenceIds: HashSet<String> = HashSet()
     private val triggeredEnterGeofenceIds: HashSet<String> = HashSet()
     private var triggedGeofenceIdsList: ArrayList<String> = ArrayList()
 
     override fun onReceive(context: Context?, intent: Intent?) {
-        geofencePref = context?.getSharedPreferences("TriggeredExitedId", Context.MODE_PRIVATE)
+        geoFencePref = context?.getSharedPreferences("TriggeredExitedId", Context.MODE_PRIVATE)
 
         val geofencingEvent = GeofencingEvent.fromIntent(intent!!)
         if (geofencingEvent.hasError()) {
@@ -32,10 +33,10 @@ class GeofenceBroadcastReceiver : BroadcastReceiver() {
             Geofence.GEOFENCE_TRANSITION_ENTER -> {
                 Log.d(TAG, "ENTER TRANSITION")
 
-                // Get the geofences that were triggered. A single event can trigger multiple geofences.
                 val triggeringGeofences = geofencingEvent.triggeringGeofences
                 storeGeofenceTransitionDetails(geofenceTransition, triggeringGeofences)
-
+                //val triggeringGeofences = geofencingEvent.triggeringGeofences
+                //for (geofence in triggeringGeofences) Log.d(TAG, "Geofence ${geofence.requestId} triggered enter!")
                 /*
                 // Obtaining transition details as a String.
                 val geofenceTransitionDetails = getGeofenceTransitionDetails(
@@ -54,6 +55,12 @@ class GeofenceBroadcastReceiver : BroadcastReceiver() {
             }
             Geofence.GEOFENCE_TRANSITION_EXIT -> {
                 Log.d(TAG, "EXIT TRANSITION")
+                // Get the geofences that were triggered. A single event can trigger
+                // multiple geofences.
+                val triggeringGeofences = geofencingEvent.triggeringGeofences
+                storeGeofenceTransitionDetails(geofenceTransition, triggeringGeofences)
+
+                for (geofence in triggeringGeofences) Log.d(TAG, "Geofence ${geofence.requestId} triggered!")
 
                 // Creating and sending Notification
                 val notificationManager = ContextCompat.getSystemService(
@@ -72,15 +79,21 @@ class GeofenceBroadcastReceiver : BroadcastReceiver() {
         }
     }
 
-    private fun storeGeofenceTransitionDetails(geofenceTransition: Int, triggeredGeofences: List<Geofence>) {
-        triggeredEnterGeofenceIds.clear()
+    private fun storeGeofenceTransitionDetails(
+        geofenceTransition: Int,
+        triggeredGeofences: List<Geofence>
+    ) {
+        triggeredExitGeofenceIds.clear()
         for (geofence in triggeredGeofences) {
             triggedGeofenceIdsList.add(geofence.requestId)
-
-            if (geofenceTransition == Geofence.GEOFENCE_TRANSITION_ENTER) {
+            if (geofenceTransition == Geofence.GEOFENCE_TRANSITION_EXIT) {
+                triggeredExitGeofenceIds.add(geofence.requestId)
+            }
+            else if(geofenceTransition == Geofence.GEOFENCE_TRANSITION_ENTER) {
                 triggeredEnterGeofenceIds.add(geofence.requestId)
             }
         }
-        geofencePref?.edit()?.putStringSet("geoFenceId", triggeredEnterGeofenceIds)?.apply()
+        geoFencePref?.edit()?.putStringSet("geoFenceExitId", triggeredExitGeofenceIds)?.apply()
+        geoFencePref?.edit()?.putStringSet("geoFenceEnterId", triggeredEnterGeofenceIds)?.apply()
     }
 }
