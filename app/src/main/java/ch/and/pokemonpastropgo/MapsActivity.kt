@@ -251,7 +251,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, SharedPreferences.
                 if (distToCheck[0] > it.huntZone.radius) View.GONE else View.VISIBLE
 
         }
-
+        huntZonesVm.getZone(zoneId).removeObservers(this)
         startLocationUpdates()
     }
 
