@@ -42,8 +42,8 @@ class ZoneListRecyclerAdapter(
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-        model.pokemonsFoundCntByZone(items[position].huntZone.zoneId!!).observe(context){
-            holder.bind(items[position],it)
+        model.pokemonsFoundCntByZone(items[position].huntZone.zoneId!!).observe(context) {
+            holder.bind(items[position], it)
         }
     }
 
@@ -69,7 +69,7 @@ class ZoneListRecyclerAdapter(
                     distances
                 )
                 when {
-                    distances[0] < zone.huntZone.radius -> zoneDistance.text = "You are in the zone"
+                    distances[0] < zone.huntZone.radius -> zoneDistance.text = context.getString(R.string.you_are_in_the_zone)
                     distances[0] < 1000 -> zoneDistance.text = "${distances[0].toInt()} m"
                     distances[0] < 10000 -> zoneDistance.text = "${distances[0].toInt() / 1000} km"
                     distances[0] < 50000 -> zoneDistance.text = "${distances[0].toInt() / 1000} km"

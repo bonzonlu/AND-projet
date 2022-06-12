@@ -42,7 +42,7 @@ class GeofenceBroadcastReceiver : BroadcastReceiver() {
                 notificationManager.sendGeofenceNotification(
                     context,
                     trigger[0].requestId.toLong(),
-                    "You have entered a hunting area, start hunting !"
+                    context.getString(R.string.enter_notification_content)
                 )
                 geoFencePref?.edit()?.putBoolean(
                     context.resources.getString(
@@ -59,7 +59,7 @@ class GeofenceBroadcastReceiver : BroadcastReceiver() {
                 notificationManager.sendGeofenceNotification(
                     context,
                     geofencingEvent.triggeringGeofences[0].requestId.toLong(),
-                    "Go back to the zone to keep hunting !"
+                    context.getString(R.string.exit_notification_content)
                 )
                 geoFencePref?.edit()?.putBoolean(
                     context.resources.getString(

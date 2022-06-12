@@ -12,4 +12,11 @@
     <string name="location_status">isInside</string>
     <integer name="location_notification_id">1</integer>
     <integer name="geofence_notification_id">2</integer>
+
+    <string name="enter_notification_content">You have entered a hunting area, click here to start hunting !</string>
+    <string name="exit_notification_content">Go back to the zone to keep hunting !</string>
+    <string name="dialog_title_hints">Hints</string>
+    <string name="dialog_title_historybook">History book</string>
+    <string name="you_are_in_the_zone">You are in the zone</string>
+    <string name="zone_distance_meters">%1$d m</string>
 </resources>
