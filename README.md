@@ -52,4 +52,13 @@ Fonctionnalités avancées : *Geofencing, Base de données spatiales*
 
 ## Remarques
 
-- Notre application utilise une carte Google Maps, il est donc nécessaire de posséder une clé d'API Google Maps pour que tout fonctionne. Merci de nous contacter si vous souhaitez avoir accès à notre clé utilisée pendant le développement.
+- Notre application utilise une carte Google Maps, il est donc nécessaire de posséder une **clé d'API Google Maps** pour que tout fonctionne. Merci de nous contacter si vous souhaitez avoir accès à notre clé utilisée pendant le développement.
+
+- **3 permissions** sont nécessaires pour l'exécution de notre application :
+	- **android.permission.CAMERA** pour pouvoir scanner les QR-codes
+   - **android.permission.ACCESS FINE LOCATION** pour afficher notre position précise sur la carte
+   - **android.permission.ACCESS BACKGROUND LOCATION** pour la gestion des geofences, et notamment les transitions enter, dwell et exit
+
+Il est donc nécessaire de choisir "Always allow" pour cette dernière, et non pas juste "While the app is running".
+
+- Les **QR-codes à scanner** sont dans le dossier `qrcodes/` à la racine du dossier du projet. Le nom correspond au Pokémon à chasser, et le numéro à la zone (dans l'ordre de la liste telle qu'elle est affichée sur l'activité principale).
