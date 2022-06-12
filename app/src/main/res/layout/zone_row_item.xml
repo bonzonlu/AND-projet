@@ -1,15 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 
-<androidx.cardview.widget.CardView
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:clickable="true"
-    >
+    android:clickable="true">
 
     <androidx.constraintlayout.widget.ConstraintLayout
-
         android:id="@+id/zone_row_item"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -20,7 +17,7 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:orientation="horizontal"
-            app:layout_constraintGuide_percent="0.5"/>
+            app:layout_constraintGuide_percent="0.5" />
 
         <androidx.constraintlayout.widget.Guideline
             android:id="@+id/icon_guideline"
@@ -44,9 +41,9 @@
             android:layout_height="wrap_content"
             android:layout_alignBaseline="@+id/title_icon"
             android:layout_toEndOf="@+id/title_icon"
-            android:text="zone title"
-            app:layout_constraintStart_toEndOf="@+id/icon_guideline"
-            app:layout_constraintBottom_toTopOf="@id/horizontal_guideline"/>
+            android:text="@string/zone_title_placeholder"
+            app:layout_constraintBottom_toTopOf="@id/horizontal_guideline"
+            app:layout_constraintStart_toEndOf="@+id/icon_guideline" />
 
         <TextView
             android:id="@+id/zone_distance"
@@ -54,10 +51,9 @@
             android:layout_height="wrap_content"
             android:layout_alignBaseline="@+id/title_icon"
             android:layout_toEndOf="@+id/title_icon"
-            android:text="fetching distance..."
+            android:text="@string/fetching_distance_placeholder"
             app:layout_constraintStart_toEndOf="@+id/icon_guideline"
-            app:layout_constraintTop_toBottomOf="@id/zone_title"/>
-
+            app:layout_constraintTop_toBottomOf="@id/zone_title" />
 
         <TextView
             android:id="@+id/count"
@@ -65,7 +61,7 @@
             android:layout_height="wrap_content"
             android:text="0/6"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="parent"/>
+            app:layout_constraintTop_toTopOf="parent" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 </androidx.cardview.widget.CardView>

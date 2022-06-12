@@ -109,7 +109,6 @@ class QRCodeActivity : AppCompatActivity() {
 
             override fun receiveDetections(detections: Detections<Barcode>) {
                 val barcodes = detections.detectedItems
-                // TODO : Use scanned value instead of simple Toast
                 if (barcodes.size() == 1) {
                     scannedValue = barcodes.valueAt(0).rawValue
 

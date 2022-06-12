@@ -30,7 +30,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginLeft="10dp"
-            android:text="pokemon"
+            android:text="@string/pokemon_placeholder"
             app:layout_constraintStart_toEndOf="@id/pokemon_icon_guideline"
             app:layout_constraintTop_toTopOf="parent" />
 
@@ -39,7 +39,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_toEndOf="@+id/pokemon_name"
-            android:text="hint"
+            android:text="@string/dialog_title_hints"
             app:layout_constraintStart_toStartOf="@id/pokemon_name"
             app:layout_constraintTop_toBottomOf="@id/pokemon_name" />
     </androidx.constraintlayout.widget.ConstraintLayout>
