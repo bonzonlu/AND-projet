@@ -26,25 +26,23 @@ import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 
 class MyGeofenceService : Service() {
-
-    lateinit var zones: HuntZoneRepository
-    lateinit var scope: CoroutineScope
+    private lateinit var zones: HuntZoneRepository
+    private lateinit var scope: CoroutineScope
 
     inner class LocalBinder : Binder() {
         val service: MyGeofenceService
             get() = this@MyGeofenceService
     }
 
-    val mBinder: IBinder = LocalBinder()
+    private val mBinder: IBinder = LocalBinder()
 
     private lateinit var geoClient: GeofencingClient
     private val geofenceList = ArrayList<Geofence>()
 
-    lateinit var zoneTitles: ArrayList<String>
-    lateinit var geofenceRequest: GeofencingRequest
+    private lateinit var zoneTitles: ArrayList<String>
+    private lateinit var geofenceRequest: GeofencingRequest
 
-
-    val gobalPendingIntent: PendingIntent by lazy {
+    private val globalPendingIntent: PendingIntent by lazy {
         val intent = Intent(this@MyGeofenceService, GeofenceBroadcastReceiver::class.java)
         PendingIntent.getBroadcast(
             this@MyGeofenceService,
@@ -54,7 +52,7 @@ class MyGeofenceService : Service() {
         )
     }
 
-    val uniquePendingIntent: PendingIntent by lazy {
+    private val uniquePendingIntent: PendingIntent by lazy {
         val intent = Intent(this@MyGeofenceService, GeofenceBroadcastReceiver::class.java)
         PendingIntent.getBroadcast(
             this@MyGeofenceService,
@@ -67,7 +65,7 @@ class MyGeofenceService : Service() {
     @SuppressLint("MissingPermission")
     fun createUniqueGeofenceRequest(zone: PokemonsFromHuntZone) {
         geofenceList.clear()
-        Log.d("MyGeofenceService", "createUniqueGeofenceRequest ${zone}")
+        Log.d("MyGeofenceService", "createUniqueGeofenceRequest $zone")
         geofenceList.add(
             Geofence.Builder()
                 .setRequestId(zone.huntZone.zoneId.toString())
@@ -98,9 +96,7 @@ class MyGeofenceService : Service() {
                     Log.d("MyGeofenceService", "Geofence failed")
                 }
         }
-
     }
-
 
     @SuppressLint("MissingPermission")
     fun createGlobalGeofenceRequest() {
@@ -134,7 +130,7 @@ class MyGeofenceService : Service() {
                         Manifest.permission.ACCESS_FINE_LOCATION
                     ) == PackageManager.PERMISSION_GRANTED
                 ) {
-                    geoClient.addGeofences(geofenceRequest, gobalPendingIntent)
+                    geoClient.addGeofences(geofenceRequest, globalPendingIntent)
                         .addOnSuccessListener {
                             Log.d("MyGeofenceService", "Geofence added")
                         }
@@ -149,7 +145,7 @@ class MyGeofenceService : Service() {
     }
 
     fun removeGlobalGeofenceRequest() {
-        geoClient.removeGeofences(gobalPendingIntent)
+        geoClient.removeGeofences(globalPendingIntent)
     }
 
     fun removeUniqueGeofenceRequest() {
@@ -184,7 +180,4 @@ class MyGeofenceService : Service() {
         removeGlobalGeofenceRequest()
         removeUniqueGeofenceRequest()
     }
-
-
 }
-

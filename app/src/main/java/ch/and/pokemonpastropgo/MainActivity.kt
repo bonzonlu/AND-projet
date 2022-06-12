@@ -1,3 +1,10 @@
+/**
+ * HEIG-VD, AND-Projet - "Pokemon pas trop Go"
+ * Application de chasse aux trésors (QR-codes) à l'aide de Geofences
+ * @authors : Bonzon Ludovic, Janssens Emmanuel, Vaz Afonso Vitor
+ * @date : 12.06.2022
+ */
+
 package ch.and.pokemonpastropgo
 
 import android.Manifest
@@ -17,21 +24,22 @@ import androidx.core.app.ActivityCompat
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import ch.and.pokemonpastropgo.RecyclerViews.ZoneListRecyclerAdapter
+import ch.and.pokemonpastropgo.recyclerViews.ZoneListRecyclerAdapter
 import ch.and.pokemonpastropgo.databinding.ActivityMainBinding
 import ch.and.pokemonpastropgo.db.PPTGDatabaseApp
 import ch.and.pokemonpastropgo.geofencing.MyGeofenceService
 import ch.and.pokemonpastropgo.geofencing.MyLocationService
-import ch.and.pokemonpastropgo.viewmodels.HuntZonesViewmodel
-import ch.and.pokemonpastropgo.viewmodels.PokemonToHuntViewModel
-import ch.and.pokemonpastropgo.viewmodels.ViewModelFactory
+import ch.and.pokemonpastropgo.viewModels.HuntZonesViewModel
+import ch.and.pokemonpastropgo.viewModels.PokemonToHuntViewModel
+import ch.and.pokemonpastropgo.viewModels.ViewModelFactory
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 
 class MainActivity : AppCompatActivity() {
-    lateinit var mainBinding: ActivityMainBinding
+    private lateinit var mainBinding: ActivityMainBinding
 
-    private val vm: HuntZonesViewmodel by viewModels {
+    // ViewModels
+    private val vm: HuntZonesViewModel by viewModels {
         ViewModelFactory((application as PPTGDatabaseApp).huntZoneRepository)
     }
 
@@ -39,6 +47,7 @@ class MainActivity : AppCompatActivity() {
         ViewModelFactory((application as PPTGDatabaseApp).pokemonToHuntRepository)
     }
 
+    // Permissions request
     @RequiresApi(Build.VERSION_CODES.Q)
     private val registerForLocationAndCameraAccess =
         registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) {
@@ -48,6 +57,7 @@ class MainActivity : AppCompatActivity() {
                 finish()
             }
         }
+
     @RequiresApi(Build.VERSION_CODES.Q)
     private val registerForBackGroundAccess =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) {
@@ -56,9 +66,10 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-    // To invoke the bound service, first make sure that this value
-    // is not null.
+    // Location & Geofence services
+    // To invoke the bound service, first make sure that this value is not null.
     private var myLocationService: MyLocationService? = null
+
     private val locationServiceConnection: ServiceConnection = object : ServiceConnection {
         override fun onServiceConnected(className: ComponentName, service: IBinder) {
             myLocationService = (service as MyLocationService.LocalBinder).service
@@ -84,6 +95,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private var myGeofenceService: MyGeofenceService? = null
+
     private val geofenceServiceConnection: ServiceConnection = object : ServiceConnection {
         override fun onServiceConnected(className: ComponentName, service: IBinder) {
             myGeofenceService = (service as MyGeofenceService.LocalBinder).service
@@ -97,8 +109,8 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-
-    fun doBindService() {
+    // Service binding
+    private fun doBindService() {
         bindService(
             Intent(this@MainActivity, MyLocationService::class.java),
             locationServiceConnection,
@@ -118,6 +130,7 @@ class MainActivity : AppCompatActivity() {
     override fun onStart() {
         super.onStart()
 
+        // Check permissions if not granted, or bind services
         if (!authorizedLocation())
             registerForLocationAndCameraAccess.launch(
                 arrayOf(
@@ -133,7 +146,6 @@ class MainActivity : AppCompatActivity() {
         super.onResume()
         Log.d("MainActivity", "Resume")
         myGeofenceService?.createGlobalGeofenceRequest()
-
     }
 
     override fun onDestroy() {
@@ -151,8 +163,8 @@ class MainActivity : AppCompatActivity() {
                 ))
         val formalizeBackground =
             PackageManager.PERMISSION_GRANTED == ActivityCompat.checkSelfPermission(
-                    this, Manifest.permission.ACCESS_BACKGROUND_LOCATION
-                )
+                this, Manifest.permission.ACCESS_BACKGROUND_LOCATION
+            )
         return formalizeForeground && formalizeBackground
     }
 

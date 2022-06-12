@@ -23,6 +23,7 @@ class GeofenceBroadcastReceiver : BroadcastReceiver() {
             Context.MODE_PRIVATE
         )
 
+        // Check for errors
         val geofencingEvent = GeofencingEvent.fromIntent(intent!!)
         if (geofencingEvent.hasError()) {
             val errorMessage = GeofenceStatusCodes.getStatusCodeString(geofencingEvent.errorCode)
@@ -30,10 +31,11 @@ class GeofenceBroadcastReceiver : BroadcastReceiver() {
             return
         }
 
+        // Handles transition types (Enter, Exit, Dwell)
         when (val geofenceTransition = geofencingEvent.geofenceTransition) {
             Geofence.GEOFENCE_TRANSITION_ENTER -> {
-
                 val trigger = geofencingEvent.triggeringGeofences
+
                 // Creating and sending Notification
                 val notificationManager = ContextCompat.getSystemService(
                     context!!,
@@ -49,7 +51,6 @@ class GeofenceBroadcastReceiver : BroadcastReceiver() {
                         R.string.location_status
                     ), true
                 )?.apply()
-
             }
             Geofence.GEOFENCE_TRANSITION_EXIT -> {
                 val notificationManager = ContextCompat.getSystemService(

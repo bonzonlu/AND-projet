@@ -1,4 +1,4 @@
-package ch.and.pokemonpastropgo.RecyclerViews
+package ch.and.pokemonpastropgo.recyclerViews
 
 import android.content.Intent
 import android.location.Location
@@ -13,7 +13,7 @@ import ch.and.pokemonpastropgo.MapsActivity
 import ch.and.pokemonpastropgo.R
 import ch.and.pokemonpastropgo.db.models.PokemonsFromHuntZone
 import ch.and.pokemonpastropgo.geofencing.MyLocationService
-import ch.and.pokemonpastropgo.viewmodels.PokemonToHuntViewModel
+import ch.and.pokemonpastropgo.viewModels.PokemonToHuntViewModel
 
 class ZoneListRecyclerAdapter(
     private val model: PokemonToHuntViewModel,
@@ -52,6 +52,7 @@ class ZoneListRecyclerAdapter(
         private val zonePokemonCount = view.findViewById<TextView>(R.id.count)
         private val zoneDistance = view.findViewById<TextView>(R.id.zone_distance)
 
+        // Binds hunt zones in the main activity
         fun bind(zone: PokemonsFromHuntZone, count: Long) {
             view.setOnClickListener {
                 val i = Intent(context, MapsActivity::class.java)
@@ -70,17 +71,16 @@ class ZoneListRecyclerAdapter(
                 )
                 when {
                     distances[0] < zone.huntZone.radius -> zoneDistance.text = context.getString(R.string.you_are_in_the_zone)
-                    distances[0] < 1000 -> zoneDistance.text = "${distances[0].toInt()} m"
-                    distances[0] < 10000 -> zoneDistance.text = "${distances[0].toInt() / 1000} km"
-                    distances[0] < 50000 -> zoneDistance.text = "${distances[0].toInt() / 1000} km"
-                    else -> zoneDistance.text = "> 50 km"
+                    distances[0] < 1000 -> zoneDistance.text = context.getString(R.string.zone_distance_meters, distances[0].toInt())
+                    distances[0] < 10000 -> zoneDistance.text = context.getString(R.string.zone_distance_kilometers, distances[0].toInt() / 1000)
+                    distances[0] < 50000 -> zoneDistance.text = context.getString(R.string.zone_distance_kilometers, distances[0].toInt() / 1000)
+                    else -> zoneDistance.text = context.getString(R.string.zone_distance_over_50_kilometers)
                 }
             }
 
             zoneTitle.text = zone.huntZone.title
             zonePokemonCount.text =
                 context.getString(R.string.found_pokemons, count, zone.notPokemons.size)
-
         }
     }
 }

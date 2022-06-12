@@ -22,7 +22,6 @@ import android.view.animation.AnimationUtils
 import android.widget.LinearLayout
 import android.widget.PopupWindow
 import android.widget.TextView
-import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContract
 import androidx.activity.viewModels
 import androidx.annotation.RequiresApi
@@ -33,15 +32,15 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import ch.and.pokemonpastropgo.RecyclerViews.HintListRecyclerAdapter
+import ch.and.pokemonpastropgo.recyclerViews.HintListRecyclerAdapter
 import ch.and.pokemonpastropgo.databinding.ActivityMapsBinding
 import ch.and.pokemonpastropgo.db.PPTGDatabaseApp
 import ch.and.pokemonpastropgo.geofencing.MyGeofenceService
 import ch.and.pokemonpastropgo.geofencing.MyLocationService
 import ch.and.pokemonpastropgo.geofencing.createChannel
-import ch.and.pokemonpastropgo.viewmodels.HuntZonesViewmodel
-import ch.and.pokemonpastropgo.viewmodels.PokemonToHuntViewModel
-import ch.and.pokemonpastropgo.viewmodels.ViewModelFactory
+import ch.and.pokemonpastropgo.viewModels.HuntZonesViewModel
+import ch.and.pokemonpastropgo.viewModels.PokemonToHuntViewModel
+import ch.and.pokemonpastropgo.viewModels.ViewModelFactory
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
@@ -55,8 +54,7 @@ import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import kotlin.math.sqrt
 
-// https://github.com/brandy-kay/GeofencingDemo/tree/master/app/src/main/java/com/adhanjadevelopers/geofencingdemo
-
+// Inspiration from: https://github.com/brandy-kay/GeofencingDemo/tree/master/app/src/main/java/com/adhanjadevelopers/geofencingdemo
 private const val TAG = "MapsActivity"
 
 class MapsActivity : AppCompatActivity(), OnMapReadyCallback, SharedPreferences.OnSharedPreferenceChangeListener {
@@ -93,15 +91,14 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, SharedPreferences.
     private val toHuntVm: PokemonToHuntViewModel by viewModels {
         ViewModelFactory((application as PPTGDatabaseApp).pokemonToHuntRepository)
     }
-    private val huntZonesVm: HuntZonesViewmodel by viewModels {
+    private val huntZonesVm: HuntZonesViewModel by viewModels {
         ViewModelFactory((application as PPTGDatabaseApp).huntZoneRepository)
     }
 
-
     private var mapFrag: SupportMapFragment? = null
 
-    // To invoke the bound service, first make sure that this value
-    // is not null.
+    // Location & Geofence services
+    // To invoke the bound service, first make sure that this value is not null.
     private var myLocationService: MyLocationService? = null
 
     private val locationServiceConnection: ServiceConnection = object : ServiceConnection {
@@ -160,7 +157,6 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, SharedPreferences.
         mapsBinding.locationHintFab.setOnClickListener { openPopupWindow() }
         mapsBinding.historyBookFab.setOnClickListener { openHistory() }
 
-
         mapFrag = supportFragmentManager.findFragmentById(R.id.map) as SupportMapFragment?
 
         bindService(
@@ -171,7 +167,6 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, SharedPreferences.
             Intent(this@MapsActivity, MyGeofenceService::class.java),
             geofenceServiceConnection, BIND_AUTO_CREATE
         )
-
     }
 
     @RequiresApi(Build.VERSION_CODES.Q)
@@ -229,13 +224,13 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, SharedPreferences.
 
             // Moves the camera to show the entire area of interest
             mMap.setOnMapLoadedCallback {
-                val camupdate = CameraUpdateFactory.newLatLngBounds(huntZoneBounds, 200)
-                mMap.animateCamera(camupdate)
+                val cameraUpdate = CameraUpdateFactory.newLatLngBounds(huntZoneBounds, 200)
+                mMap.animateCamera(cameraUpdate)
             }
             supportActionBar?.title = it.huntZone.title
 
             val distToCheck =
-                FloatArray(2) //variable to take distance from our location to center of crcle
+                FloatArray(2) // variable to take distance from our location to center of circle
             Location.distanceBetween(
                 it.huntZone.lat,
                 it.huntZone.lng,
@@ -265,7 +260,6 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, SharedPreferences.
     @SuppressLint("MissingPermission")
     private fun startLocationUpdates() {
         if (!mMap.isMyLocationEnabled) {
-
             if ((ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PERMISSION_GRANTED) ||
                 (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) == PERMISSION_GRANTED)
             ) {
@@ -314,9 +308,9 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, SharedPreferences.
         super.onDestroy()
         myGeofenceService?.removeUniqueGeofenceRequest()
     }
-    // Handles QR-code scanner button enabling or disabling
-    // FIXME
-    // https://stackoverflow.com/questions/67416235/how-to-notify-the-calling-activity-from-a-broadcastreceiver-when-using-geofencin
+
+    // Handles QR-code scanner button enabling or disabling using shared preferences
+    // Inspired from: https://stackoverflow.com/questions/67416235/how-to-notify-the-calling-activity-from-a-broadcastreceiver-when-using-geofencin
     override fun onSharedPreferenceChanged(sharedPreferences: SharedPreferences?, key: String?) {
         val triggers: Boolean
         if (key.equals(resources.getString(R.string.location_status))) {
@@ -400,8 +394,8 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, SharedPreferences.
         popupWindow.showAtLocation(mapsBinding.root, Gravity.CENTER, 0, 0)
         content.visibility = View.VISIBLE
     }
+
     companion object {
         const val MY_PERMISSIONS_REQUEST_LOCATION = 99
-        const val REQUEST_TURN_DEVICE_LOCATION_ON = 20
     }
 }

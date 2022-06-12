@@ -1,4 +1,4 @@
-package ch.and.pokemonpastropgo.RecyclerViews
+package ch.and.pokemonpastropgo.recyclerViews
 
 import androidx.recyclerview.widget.DiffUtil
 import ch.and.pokemonpastropgo.db.models.PokemonToHunt

@@ -1,4 +1,4 @@
-package ch.and.pokemonpastropgo.RecyclerViews
+package ch.and.pokemonpastropgo.recyclerViews
 
 import android.graphics.BitmapFactory
 import android.graphics.BlurMaskFilter
@@ -12,7 +12,7 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import ch.and.pokemonpastropgo.R
 import ch.and.pokemonpastropgo.db.models.PokemonToHunt
-import ch.and.pokemonpastropgo.viewmodels.PokemonToHuntViewModel
+import ch.and.pokemonpastropgo.viewModels.PokemonToHuntViewModel
 import jp.wasabeef.blurry.Blurry
 
 class HintListRecyclerAdapter(
@@ -55,6 +55,7 @@ class HintListRecyclerAdapter(
         private val hintText = view.findViewById<TextView>(R.id.hint_text)
         private val pokemonIcon = view.findViewById<ImageView>(R.id.pokemon_icon)
 
+        // Binds Pokémon to hunt in the hints list
         fun bind(item: PokemonToHunt) {
             pokemonName.text = item.pokemonId
             hintText.text = item.hint
@@ -70,7 +71,7 @@ class HintListRecyclerAdapter(
             }
 
             view.setOnClickListener {
-                hintText.setLayerType(View.LAYER_TYPE_SOFTWARE,null);
+                hintText.setLayerType(View.LAYER_TYPE_SOFTWARE, null)
                 hintText.paint.maskFilter = null
             }
         }

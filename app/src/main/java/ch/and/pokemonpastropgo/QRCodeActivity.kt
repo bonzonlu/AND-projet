@@ -10,36 +10,32 @@ import android.view.SurfaceHolder
 import android.view.animation.Animation
 import android.view.animation.AnimationUtils
 import android.widget.Toast
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
-import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import ch.and.pokemonpastropgo.databinding.ActivityQrcodeBinding
 import ch.and.pokemonpastropgo.db.PPTGDatabaseApp
-import ch.and.pokemonpastropgo.viewmodels.PokemonToHuntViewModel
-import ch.and.pokemonpastropgo.viewmodels.ViewModelFactory
+import ch.and.pokemonpastropgo.viewModels.PokemonToHuntViewModel
+import ch.and.pokemonpastropgo.viewModels.ViewModelFactory
 import java.io.IOException
 import com.google.android.gms.vision.CameraSource
 import com.google.android.gms.vision.Detector
 import com.google.android.gms.vision.barcode.Barcode
 import com.google.android.gms.vision.barcode.BarcodeDetector
 import com.google.android.gms.vision.Detector.Detections
-import java.lang.Exception
 
-// Source from : https://harshitabambure.medium.com/barcode-scanner-and-qr-code-scanner-android-kotlin-b911b1299f65
+// Inspired from: https://harshitabambure.medium.com/barcode-scanner-and-qr-code-scanner-android-kotlin-b911b1299f65
 class QRCodeActivity : AppCompatActivity() {
-    private val requestCodeCameraPermission = 1001
     private lateinit var cameraSource: CameraSource
     private lateinit var barcodeDetector: BarcodeDetector
     private var scannedValue = ""
     private lateinit var qrCodeActivityBinding: ActivityQrcodeBinding
 
+    // View Model
     private val toHuntVm: PokemonToHuntViewModel by viewModels {
         ViewModelFactory((application as PPTGDatabaseApp).pokemonToHuntRepository)
     }
 
-
-    private  var zoneId = -1L
+    private var zoneId = -1L
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         qrCodeActivityBinding = ActivityQrcodeBinding.inflate(layoutInflater)
@@ -52,12 +48,10 @@ class QRCodeActivity : AppCompatActivity() {
             setupControls()
         }
 
-        val aniSlide: Animation =
-            AnimationUtils.loadAnimation(this@QRCodeActivity, R.anim.scanner_animation)
+        val aniSlide: Animation = AnimationUtils.loadAnimation(this@QRCodeActivity, R.anim.scanner_animation)
         qrCodeActivityBinding.barcodeLine.startAnimation(aniSlide)
 
-        zoneId = intent.getLongExtra("zoneId",-1)
-
+        zoneId = intent.getLongExtra("zoneId", -1)
     }
 
     private fun setupControls() {
@@ -74,7 +68,7 @@ class QRCodeActivity : AppCompatActivity() {
             override fun surfaceCreated(holder: SurfaceHolder) {
                 try {
                     //Start preview after 1s delay
-                        Log.d("QRCodeActivity", "surfaceCreated")
+                    Log.d("QRCodeActivity", "surfaceCreated")
                     cameraSource.start(holder)
                 } catch (e: IOException) {
                     e.printStackTrace()
@@ -104,7 +98,6 @@ class QRCodeActivity : AppCompatActivity() {
 
         barcodeDetector.setProcessor(object : Detector.Processor<Barcode> {
             override fun release() {
-
             }
 
             override fun receiveDetections(detections: Detections<Barcode>) {
@@ -116,14 +109,15 @@ class QRCodeActivity : AppCompatActivity() {
                     runOnUiThread {
                         cameraSource.stop()
 
+                        // When QR-code has been scanned, it shows the value in a toast and sends it back to the map activity through an intent
                         Toast.makeText(this@QRCodeActivity, "value- $scannedValue", Toast.LENGTH_SHORT).show()
-                        if(zoneId == scannedValue.substringAfter("_").toLong()){
+                        if (zoneId == scannedValue.substringAfter("_").toLong()) {
                             val res = Intent()
-                            res.putExtra(SCAN_QR_RESULT_KEY,scannedValue)
-                            setResult(RESULT_OK,res)
+                            res.putExtra(SCAN_QR_RESULT_KEY, scannedValue)
+                            setResult(RESULT_OK, res)
                             toHuntVm.foundPokemon(scannedValue)
-                        }else{
-                            Log.d("ERROR","You are not in the required zone")
+                        } else {
+                            Log.d("ERROR", "You are not in the required zone")
                         }
                         finish()
                     }
@@ -132,14 +126,12 @@ class QRCodeActivity : AppCompatActivity() {
         })
     }
 
-
-
     override fun onDestroy() {
         super.onDestroy()
         cameraSource.stop()
     }
 
-    companion object{
-        val SCAN_QR_RESULT_KEY="QR_KEY"
+    companion object {
+        const val SCAN_QR_RESULT_KEY = "QR_KEY"
     }
 }

@@ -18,8 +18,10 @@
     <string name="dialog_title_hints">Hints</string>
     <string name="dialog_title_historybook">History book</string>
     <string name="you_are_in_the_zone">You are in the zone</string>
-    <string name="fetching_distance_placeholder">Fetching distance...</string>
+    <string name="fetching_distance_placeholder">Fetching distance…</string>
     <string name="zone_distance_meters">%1$d m</string>
+    <string name="zone_distance_kilometers">%1$d km</string>
+    <string name="zone_distance_over_50_kilometers">> 50 km</string>
     <string name="zone_title_placeholder">zone_title</string>
     <string name="pokemon_placeholder">pokemon</string>
 </resources>

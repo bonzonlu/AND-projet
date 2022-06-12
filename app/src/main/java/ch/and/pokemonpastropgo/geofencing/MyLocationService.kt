@@ -1,6 +1,7 @@
 package ch.and.pokemonpastropgo.geofencing
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.app.NotificationManager
 import android.app.Service
 import android.content.Intent
@@ -16,12 +17,8 @@ import androidx.lifecycle.MutableLiveData
 import ch.and.pokemonpastropgo.R
 import com.google.android.gms.location.*
 
-
 class MyLocationService : Service() {
-
-    lateinit var notificationManager: NotificationManager
-
-
+    private lateinit var notificationManager: NotificationManager
     var mLastLocation: Location? = null
     private var mFusedLocationClient: FusedLocationProviderClient? = null
     private lateinit var mLocationRequest: LocationRequest
@@ -31,13 +28,10 @@ class MyLocationService : Service() {
             get() = this@MyLocationService
     }
 
-    val mBinder: IBinder = LocalBinder()
-
+    private val mBinder: IBinder = LocalBinder()
     var location = MutableLiveData<Location>()
 
-
-    var MyLocationCallback: LocationCallback = object : LocationCallback() {
-
+    private var myLocationCallback: LocationCallback = object : LocationCallback() {
         override fun onLocationResult(locationResult: LocationResult) {
             val locationList = locationResult.locations
             if (locationList.isNotEmpty()) {
@@ -48,18 +42,15 @@ class MyLocationService : Service() {
                         location.postValue(locationList.last())
                     }
                 }
-
             }
         }
     }
 
     override fun onCreate() {
-
         notificationManager = ContextCompat.getSystemService(
             this,
             NotificationManager::class.java
         ) as NotificationManager
-
 
         createChannel(
             this,
@@ -67,11 +58,10 @@ class MyLocationService : Service() {
             resources.getString(R.string.location_notif_channel_name),
             NotificationManager.IMPORTANCE_HIGH
         )
-
         showNotification()
     }
 
-    override fun onBind(intent: Intent?): IBinder? {
+    override fun onBind(intent: Intent?): IBinder {
         return mBinder
     }
 
@@ -81,7 +71,7 @@ class MyLocationService : Service() {
         return START_NOT_STICKY
     }
 
-
+    @SuppressLint("MissingPermission")
     fun startLocationUpdates() {
         // Location and permissions check
         mLocationRequest = LocationRequest.create().apply {
@@ -103,7 +93,7 @@ class MyLocationService : Service() {
             //Location Permission already granted
             mFusedLocationClient?.requestLocationUpdates(
                 mLocationRequest,
-                MyLocationCallback,
+                myLocationCallback,
                 Looper.myLooper()!!
             )
         }
@@ -111,10 +101,10 @@ class MyLocationService : Service() {
 
     override fun onDestroy() {
         super.onDestroy()
-        mFusedLocationClient?.removeLocationUpdates(MyLocationCallback)
+        mFusedLocationClient?.removeLocationUpdates(myLocationCallback)
     }
 
-    fun showNotification() {
+    private fun showNotification() {
         val builder = NotificationCompat.Builder(
             this,
             resources.getString(R.string.location_notif_channel_id)
@@ -125,5 +115,4 @@ class MyLocationService : Service() {
 
         startForeground(resources.getInteger(R.integer.location_notification_id), builder)
     }
-
 }

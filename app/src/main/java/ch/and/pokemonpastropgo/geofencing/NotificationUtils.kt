@@ -9,7 +9,6 @@ import androidx.core.app.NotificationCompat
 import ch.and.pokemonpastropgo.MapsActivity
 import ch.and.pokemonpastropgo.R
 
-
 fun createChannel(context: Context, channelId: String, channelName: String, importance: Int) {
     val notificationChannel = NotificationChannel(channelId, channelName, importance)
     val notificationManager = context.getSystemService(NotificationManager::class.java)
