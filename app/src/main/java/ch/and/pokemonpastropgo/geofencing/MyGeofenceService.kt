@@ -176,11 +176,13 @@ class MyGeofenceService : Service() {
         return START_NOT_STICKY
     }
 
-    override fun onBind(intent: Intent?): IBinder? {
+    override fun onBind(intent: Intent?): IBinder {
         return mBinder
     }
 
     override fun onDestroy() {
+        removeGlobalGeofenceRequest()
+        removeUniqueGeofenceRequest()
     }
 
 
