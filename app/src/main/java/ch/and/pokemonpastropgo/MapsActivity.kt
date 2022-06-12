@@ -21,6 +21,7 @@ import android.view.animation.Animation
 import android.view.animation.AnimationUtils
 import android.widget.LinearLayout
 import android.widget.PopupWindow
+import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContract
 import androidx.activity.viewModels
@@ -157,13 +158,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, SharedPreferences.
 
         mapsBinding.menuFab.setOnClickListener { animateFab() }
         mapsBinding.locationHintFab.setOnClickListener { openPopupWindow() }
-        mapsBinding.historyBookFab.setOnClickListener {
-            Toast.makeText(
-                this@MapsActivity,
-                "History book",
-                Toast.LENGTH_SHORT
-            ).show()
-        }
+        mapsBinding.historyBookFab.setOnClickListener { openHistory() }
 
 
         mapFrag = supportFragmentManager.findFragmentById(R.id.map) as SupportMapFragment?
@@ -214,6 +209,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, SharedPreferences.
         // Gets clicked zone from Main Activity and displays in on the map
         zoneId = intent.getLongExtra("zoneId", -1)
         huntZonesVm.getZone(zoneId).observe(this) {
+            Log.d("MapsActivity", "Zone: $it")
             zoneName = it.huntZone.title
 
             myGeofenceService?.createUniqueGeofenceRequest(it)
@@ -314,6 +310,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, SharedPreferences.
     }
 
     override fun onDestroy() {
+        Log.d("MapsActivity", "onDestroy")
         super.onDestroy()
         myGeofenceService?.removeUniqueGeofenceRequest()
     }
@@ -376,8 +373,33 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, SharedPreferences.
         popupWindow.isFocusable = true
         popupWindow.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
         popupWindow.showAtLocation(mapsBinding.root, Gravity.CENTER, 0, 0)
+        recyclerView.visibility = View.VISIBLE
     }
 
+    // Open a popup window to display hints on Pokémon to hunt
+    private fun openHistory() {
+        val popupWindow = PopupWindow(this)
+        val popupView = layoutInflater.inflate(R.layout.popup_window, null)
+
+        val recyclerView = popupView.findViewById<RecyclerView>(R.id.popup_recycler_view)
+
+        val title = popupView.findViewById<TextView>(R.id.popup_window_title)
+        val content = popupView.findViewById<TextView>(R.id.popup_window_text)
+
+        lifecycleScope.launch {
+            huntZonesVm.getZone(zoneId).observe(this@MapsActivity) {
+                title.text = it.huntZone.title
+                content.text = it.huntZone.description
+            }
+        }
+        popupWindow.contentView = popupView
+        popupWindow.width = LinearLayout.LayoutParams.WRAP_CONTENT
+        popupWindow.height = LinearLayout.LayoutParams.WRAP_CONTENT
+        popupWindow.isFocusable = true
+        popupWindow.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+        popupWindow.showAtLocation(mapsBinding.root, Gravity.CENTER, 0, 0)
+        content.visibility = View.VISIBLE
+    }
     companion object {
         const val MY_PERMISSIONS_REQUEST_LOCATION = 99
         const val REQUEST_TURN_DEVICE_LOCATION_ON = 20
