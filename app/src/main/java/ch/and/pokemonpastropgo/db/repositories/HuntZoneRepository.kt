@@ -31,4 +31,5 @@ class HuntZoneRepository(
     fun getZone(id: Long): LiveData<PokemonsFromHuntZone> {
         return huntZoneDAO.getZone(id)
     }
+
 }

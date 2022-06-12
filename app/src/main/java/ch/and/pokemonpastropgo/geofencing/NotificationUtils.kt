@@ -9,33 +9,32 @@ import androidx.core.app.NotificationCompat
 import ch.and.pokemonpastropgo.MapsActivity
 import ch.and.pokemonpastropgo.R
 
-private const val NOTIFICATION_ID = 33
-private const val CHANNEL_ID = "GeofenceChannel"
 
-fun createChannel(context: Context) {
-    val notificationChannel = NotificationChannel(CHANNEL_ID, "Channel1", NotificationManager.IMPORTANCE_HIGH)
+fun createChannel(context: Context, channelId: String, channelName: String, importance: Int) {
+    val notificationChannel = NotificationChannel(channelId, channelName, importance)
     val notificationManager = context.getSystemService(NotificationManager::class.java)
     notificationManager.createNotificationChannel(notificationChannel)
 }
 
-fun NotificationManager.sendGeofenceNotification(context: Context, enter: Boolean) {
+fun NotificationManager.sendGeofenceNotification(context: Context, zoneId: Long, content: String) {
     //Opening the Notification
     val contentIntent = Intent(context, MapsActivity::class.java)
+    contentIntent.putExtra("zoneId", zoneId)
+
     val contentPendingIntent = PendingIntent.getActivity(
         context,
-        NOTIFICATION_ID,
+        context.resources.getInteger(R.integer.geofence_notification_id),
         contentIntent,
         PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
     )
 
-    val notificationContent: String = if (enter) {
-        "You have entered a hunting area, start hunting !"
-    } else {
-        "Go back to the zone to keep hunting !"
-    }
+    val notificationContent: String = content
 
     //Building the notification
-    val builder = NotificationCompat.Builder(context, CHANNEL_ID)
+    val builder = NotificationCompat.Builder(
+        context,
+        context.resources.getString(R.string.geofence_notif_channel_id)
+    )
         .setContentTitle(context.getString(R.string.app_name))
         .setContentText(notificationContent)
         .setSmallIcon(R.drawable.ic_baseline_location_hint_24)
@@ -43,5 +42,5 @@ fun NotificationManager.sendGeofenceNotification(context: Context, enter: Boolea
         .setContentIntent(contentPendingIntent)
         .build()
 
-    this.notify(NOTIFICATION_ID, builder)
+    this.notify(R.integer.geofence_notification_id, builder)
 }

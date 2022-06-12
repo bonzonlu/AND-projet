@@ -2,4 +2,14 @@
     <string name="app_name">Pokemon pas trop Go</string>
     <string name="title_activity_maps">MapsActivity</string>
     <string name="found_pokemons">%1$d/%2$d </string>
+    <string name="geofence_preferences">geofence_data</string>
+    <string name="geofence_notif_channel_id">geofence_notif_channel</string>
+    <string name="geofence_notif_channel_name">geofence</string>
+    <string name="location_notif_channel_id">location_notif_channel</string>
+    <string name="location_notif_channel_name">localisation</string>
+
+    <string name="main_notification_channel">main_notif_channel</string>
+    <string name="location_status">isInside</string>
+    <integer name="location_notification_id">1</integer>
+    <integer name="geofence_notification_id">2</integer>
 </resources>
